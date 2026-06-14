@@ -11,6 +11,11 @@ export default function BentoHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [time, setTime] = useState("");
   const [activeTab, setActiveTab] = useState<"activity" | "now">("activity");
+  const [config, setConfig] = useState({
+    owner_name: "Aswin",
+    about_text: "A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.",
+    availability_status: "available"
+  });
 
   // Update clock
   useEffect(() => {
@@ -27,6 +32,27 @@ export default function BentoHero() {
     updateClock();
     const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch("/api/admin/config");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setConfig({
+              owner_name: data.owner_name,
+              about_text: data.about_text,
+              availability_status: data.availability_status
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching site config:", err);
+      }
+    };
+    fetchConfig();
   }, []);
 
   // GSAP Bento Assembly Animation
@@ -98,16 +124,16 @@ export default function BentoHero() {
         <div className="bento-card md:col-span-2 md:row-span-2 glass-panel rounded-3xl p-6 md:p-8 flex flex-col justify-between group">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className={`w-2.5 h-2.5 rounded-full animate-pulse ${config.availability_status === "available" ? "bg-emerald-500" : "bg-amber-500"}`} />
               <span className="text-xs text-muted font-medium uppercase tracking-wider">
-                Available for Projects
+                {config.availability_status === "available" ? "Available for Projects" : "Fully Booked"}
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
-              Hi, I&apos;m <span className="text-indigo-400">Aswin</span>
+              Hi, I&apos;m <span className="text-indigo-400">{config.owner_name}</span>
             </h1>
             <p className="text-muted text-sm md:text-base leading-relaxed max-w-md">
-              A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.
+              {config.about_text}
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-4 items-center">

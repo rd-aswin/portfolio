@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, ArrowRight, Layers, Award } from "lucide-react";
+import { CldImage } from "next-cloudinary";
 import { Github } from "../ui/icons";
 import Tilt from "../ui/tilt";
 
@@ -18,6 +19,15 @@ interface Project {
   github: string;
   demo: string;
   color: string;
+  image_public_id?: string;
+}
+
+interface DbProject {
+  id: string;
+  title: string;
+  subtitle?: string;
+  tags?: string;
+  image_public_id?: string;
 }
 
 const projectsData: Project[] = [
@@ -64,6 +74,7 @@ const projectsData: Project[] = [
 
 export default function Projects() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>(projectsData);
 
   // Disable scroll when modal is open
   useEffect(() => {
@@ -76,6 +87,46 @@ export default function Projects() {
       document.body.style.overflow = "";
     };
   }, [selectedProject]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch("/api/admin/projects");
+        if (res.ok) {
+          const dbProjects = await res.json();
+          if (dbProjects && dbProjects.length > 0) {
+            // Merge database projects with static details
+            const merged = dbProjects.map((dbProj: DbProject) => {
+              const staticProj = projectsData.find(p => p.id === dbProj.id);
+              
+              const tagsArray = typeof dbProj.tags === "string" 
+                ? dbProj.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+                : (Array.isArray(dbProj.tags) ? dbProj.tags : []);
+
+              return {
+                id: dbProj.id,
+                title: dbProj.title,
+                subtitle: dbProj.subtitle || "",
+                description: staticProj?.description || dbProj.subtitle || "",
+                detailedDescription: staticProj?.detailedDescription || dbProj.subtitle || "No description provided yet.",
+                tags: tagsArray.length > 0 ? tagsArray : (staticProj?.tags || []),
+                role: staticProj?.role || "Developer",
+                metrics: staticProj?.metrics || "Ready",
+                github: staticProj?.github || "#",
+                demo: staticProj?.demo || "#",
+                color: staticProj?.color || "from-indigo-600 to-violet-500",
+                image_public_id: dbProj.image_public_id || staticProj?.image_public_id || ""
+              };
+            });
+            setProjects(merged);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   return (
     <section id="projects" className="w-full max-w-6xl mx-auto px-4 py-20 relative">
@@ -90,7 +141,7 @@ export default function Projects() {
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {projectsData.map((project) => (
+        {projects.map((project) => (
           <Tilt key={project.id} className="h-full">
             <motion.div
               layoutId={`card-container-${project.id}`}
@@ -100,10 +151,20 @@ export default function Projects() {
               <div>
                 {/* Decorative colored gradient thumbnail */}
                 <div
-                  className={`w-full h-36 rounded-2xl bg-gradient-to-tr ${project.color} opacity-80 group-hover:opacity-100 transition-opacity duration-300 mb-6 relative overflow-hidden`}
+                  className={`w-full h-36 rounded-2xl bg-gradient-to-tr ${project.color} opacity-80 group-hover:opacity-100 transition-opacity duration-300 mb-6 relative overflow-hidden flex items-center justify-center`}
                 >
-                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
-                  <div className="absolute bottom-4 left-4 text-white font-mono text-xs font-bold bg-black/30 px-3 py-1 rounded-full border border-white/5">
+                  {project.image_public_id ? (
+                    <CldImage
+                      src={project.image_public_id}
+                      alt={project.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+                  )}
+                  <div className="absolute bottom-4 left-4 text-white font-mono text-xs font-bold bg-black/30 px-3 py-1 rounded-full border border-white/5 z-10">
                     {project.role}
                   </div>
                 </div>
@@ -168,24 +229,33 @@ export default function Projects() {
             >
               {/* Header Gradient */}
               <div
-                className={`w-full h-48 bg-gradient-to-tr ${selectedProject.color} relative p-8 flex flex-col justify-end`}
+                className={`w-full h-48 bg-gradient-to-tr ${selectedProject.color} relative p-8 flex flex-col justify-end overflow-hidden`}
               >
+                {selectedProject.image_public_id ? (
+                  <CldImage
+                    src={selectedProject.image_public_id}
+                    alt={selectedProject.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover opacity-80"
+                  />
+                ) : null}
                 <button
                   onClick={() => setSelectedProject(null)}
-                  className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white/80 hover:text-white transition-all border border-white/5"
+                  className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white/80 hover:text-white transition-all border border-white/5 z-10"
                 >
                   <X size={18} />
                 </button>
-                <div className="absolute top-4 left-4 text-xs font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5 text-indigo-300">
+                <div className="absolute top-4 left-4 text-xs font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5 text-indigo-300 z-10">
                   {selectedProject.role}
                 </div>
                 <motion.h3
                   layoutId={`card-title-${selectedProject.id}`}
-                  className="text-2xl md:text-3xl font-bold text-white mb-1"
+                  className="text-2xl md:text-3xl font-bold text-white mb-1 z-10"
                 >
                   {selectedProject.title}
                 </motion.h3>
-                <p className="text-white/90 text-sm font-medium">
+                <p className="text-white/90 text-sm font-medium z-10">
                   {selectedProject.subtitle}
                 </p>
               </div>

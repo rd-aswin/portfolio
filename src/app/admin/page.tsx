@@ -82,6 +82,14 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAuthFailure = () => {
+    sessionStorage.removeItem("admin_authenticated");
+    sessionStorage.removeItem("admin_password");
+    setIsAuthenticated(false);
+    setAuthError(true);
+    console.warn("Session expired or password invalid. Resetting authentication.");
+  };
+
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
@@ -92,25 +100,41 @@ export default function AdminDashboard() {
 
       try {
         const correctPassword = password || sessionStorage.getItem("admin_password") || "";
-        const res = await fetch("/api/admin/submissions", {
-          headers: {
-            "Authorization": `Bearer ${correctPassword}`
-          }
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const headers = { "Authorization": `Bearer ${correctPassword}` };
+
+        // 1. Fetch submissions
+        const resSubs = await fetch("/api/admin/submissions", { headers });
+        if (resSubs.ok) {
+          const data = await resSubs.json();
           setSubmissions(data);
-        } else if (res.status === 401) {
-          sessionStorage.removeItem("admin_authenticated");
-          sessionStorage.removeItem("admin_password");
-          setIsAuthenticated(false);
-          setAuthError(true);
-          console.warn("Session expired or password invalid. Resetting authentication.");
-        } else {
-          console.error("Failed to fetch submissions:", res.statusText);
+        } else if (resSubs.status === 401) {
+          handleAuthFailure();
+          return;
         }
+
+        // 2. Fetch config
+        const resConfig = await fetch("/api/admin/config");
+        if (resConfig.ok) {
+          const data = await resConfig.json();
+          if (data) setConfig(data);
+        }
+
+        // 3. Fetch projects
+        const resProj = await fetch("/api/admin/projects");
+        if (resProj.ok) {
+          const data = await resProj.json();
+          if (data) setProjects(data);
+        }
+
+        // 4. Fetch testimonials
+        const resTest = await fetch("/api/admin/testimonials");
+        if (resTest.ok) {
+          const data = await resTest.json();
+          if (data) setTestimonials(data);
+        }
+
       } catch (err) {
-        console.error("Error fetching submissions:", err);
+        console.error("Error fetching admin dashboard data:", err);
       }
     };
 
@@ -126,7 +150,32 @@ export default function AdminDashboard() {
 
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    triggerSaveNotification("Site Configuration Updated!");
+    if (isSupabaseDemoMode) {
+      triggerSaveNotification("Site Configuration Updated (Demo)!");
+      return;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(config)
+      });
+
+      if (res.ok) {
+        triggerSaveNotification("Site Configuration Updated!");
+      } else if (res.status === 401) {
+        handleAuthFailure();
+      } else {
+        console.error("Failed to update config");
+      }
+    } catch (err) {
+      console.error("Error saving config:", err);
+    }
   };
 
   const handleAddProject = async (e: React.FormEvent) => {
@@ -165,12 +214,40 @@ export default function AdminDashboard() {
       image_public_id: publicId
     };
 
-    setProjects([...projects, added]);
-    setNewProject({ title: "", subtitle: "", tags: "", file: null });
-    triggerSaveNotification("Project Added!");
+    if (isSupabaseDemoMode) {
+      setProjects([...projects, added]);
+      setNewProject({ title: "", subtitle: "", tags: "", file: null });
+      triggerSaveNotification("Project Added (Demo)!");
+      return;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(added)
+      });
+
+      if (res.ok) {
+        const savedProject = await res.json();
+        setProjects([...projects, savedProject]);
+        setNewProject({ title: "", subtitle: "", tags: "", file: null });
+        triggerSaveNotification("Project Added!");
+      } else if (res.status === 401) {
+        handleAuthFailure();
+      } else {
+        console.error("Failed to add project");
+      }
+    } catch (err) {
+      console.error("Error adding project:", err);
+    }
   };
 
-  const handleAddTestimonial = (e: React.FormEvent) => {
+  const handleAddTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTestimonial.author || !newTestimonial.quote) return;
 
@@ -179,48 +256,90 @@ export default function AdminDashboard() {
       ...newTestimonial
     };
 
-    setTestimonials([...testimonials, added]);
-    setNewTestimonial({ author: "", quote: "", title: "", company: "" });
-    triggerSaveNotification("Testimonial Added!");
+    if (isSupabaseDemoMode) {
+      setTestimonials([...testimonials, added]);
+      setNewTestimonial({ author: "", quote: "", title: "", company: "" });
+      triggerSaveNotification("Testimonial Added (Demo)!");
+      return;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/testimonials", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(added)
+      });
+
+      if (res.ok) {
+        const savedTestimonial = await res.json();
+        setTestimonials([...testimonials, savedTestimonial]);
+        setNewTestimonial({ author: "", quote: "", title: "", company: "" });
+        triggerSaveNotification("Testimonial Added!");
+      } else if (res.status === 401) {
+        handleAuthFailure();
+      } else {
+        console.error("Failed to add testimonial");
+      }
+    } catch (err) {
+      console.error("Error adding testimonial:", err);
+    }
   };
 
   const handleDeleteItem = async (id: string, type: "project" | "testimonial" | "submission") => {
-    if (type === "project") {
-      setProjects(projects.filter(p => p.id !== id));
-      triggerSaveNotification("Project Deleted");
-    } else if (type === "testimonial") {
-      setTestimonials(testimonials.filter(t => t.id !== id));
-      triggerSaveNotification("Testimonial Deleted");
-    } else {
-      if (isSupabaseDemoMode) {
+    if (isSupabaseDemoMode) {
+      if (type === "project") {
+        setProjects(projects.filter(p => p.id !== id));
+        triggerSaveNotification("Project Deleted (Demo)");
+      } else if (type === "testimonial") {
+        setTestimonials(testimonials.filter(t => t.id !== id));
+        triggerSaveNotification("Testimonial Deleted (Demo)");
+      } else {
         setSubmissions(submissions.filter(s => s.id !== id));
         triggerSaveNotification("Submission Removed (Demo)");
-        return;
+      }
+      return;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const headers = { "Authorization": `Bearer ${correctPassword}` };
+      let endpoint = "";
+
+      if (type === "project") {
+        endpoint = `/api/admin/projects?id=${id}`;
+      } else if (type === "testimonial") {
+        endpoint = `/api/admin/testimonials?id=${id}`;
+      } else {
+        endpoint = `/api/admin/submissions?id=${id}`;
       }
 
-      try {
-        const correctPassword = password || sessionStorage.getItem("admin_password") || "";
-        const res = await fetch(`/api/admin/submissions?id=${id}`, {
-          method: "DELETE",
-          headers: {
-            "Authorization": `Bearer ${correctPassword}`
-          }
-        });
-        if (res.ok) {
+      const res = await fetch(endpoint, {
+        method: "DELETE",
+        headers
+      });
+
+      if (res.ok) {
+        if (type === "project") {
+          setProjects(projects.filter(p => p.id !== id));
+          triggerSaveNotification("Project Deleted");
+        } else if (type === "testimonial") {
+          setTestimonials(testimonials.filter(t => t.id !== id));
+          triggerSaveNotification("Testimonial Deleted");
+        } else {
           setSubmissions(submissions.filter(s => s.id !== id));
           triggerSaveNotification("Submission Deleted");
-        } else if (res.status === 401) {
-          sessionStorage.removeItem("admin_authenticated");
-          sessionStorage.removeItem("admin_password");
-          setIsAuthenticated(false);
-          setAuthError(true);
-          console.warn("Session expired or password invalid. Resetting authentication.");
-        } else {
-          console.error("Failed to delete submission");
         }
-      } catch (err) {
-        console.error("Error deleting submission:", err);
+      } else if (res.status === 401) {
+        handleAuthFailure();
+      } else {
+        console.error(`Failed to delete ${type}`);
       }
+    } catch (err) {
+      console.error(`Error deleting ${type}:`, err);
     }
   };
 

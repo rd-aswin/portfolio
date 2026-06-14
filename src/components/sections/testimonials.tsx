@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, type PanInfo } from "framer-motion";
 import { MessageSquare, RotateCcw, HelpCircle } from "lucide-react";
 
@@ -37,7 +37,26 @@ const testimonialsData: Testimonial[] = [
 ];
 
 export default function Testimonials() {
+  const [loadedData, setLoadedData] = useState<Testimonial[]>(testimonialsData);
   const [cards, setCards] = useState<Testimonial[]>(testimonialsData);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const res = await fetch("/api/admin/testimonials");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setLoadedData(data);
+            setCards(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching testimonials:", err);
+      }
+    };
+    fetchTestimonials();
+  }, []);
 
   // Function to remove top card when swiped
   const removeCard = (id: string) => {
@@ -45,7 +64,7 @@ export default function Testimonials() {
   };
 
   const resetDeck = () => {
-    setCards(testimonialsData);
+    setCards(loadedData);
   };
 
   return (
