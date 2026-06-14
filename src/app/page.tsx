@@ -6,6 +6,7 @@ import Projects from "@/components/sections/projects";
 import Timeline from "@/components/sections/timeline";
 import Testimonials from "@/components/sections/testimonials";
 import Contact from "@/components/sections/contact";
+import UploadShowcase from "@/components/ui/upload-showcase";
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
         <Projects />
         <Timeline />
         <Testimonials />
+        <UploadShowcase />
         <Contact />
       </main>
 

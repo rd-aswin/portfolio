@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, Loader2, Mail, MapPin, Phone } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 export default function Contact() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
@@ -14,8 +15,20 @@ export default function Contact() {
 
     setStatus("loading");
     
-    // Simulate submission delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Save to Supabase (or trigger mock demo action)
+    const { error } = await supabase
+      .from("contact_submissions")
+      .insert([
+        {
+          name: formState.name,
+          email: formState.email,
+          message: formState.message,
+        }
+      ]);
+    
+    if (error) {
+      console.error("Failed to insert message into database:", error);
+    }
     
     setStatus("success");
     setFormState({ name: "", email: "", message: "" });

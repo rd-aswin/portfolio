@@ -17,7 +17,11 @@ This file tracks the real-time progress of the Portfolio project, including task
 | 2026-06-14 | Bootstrap Next.js App | **Completed** | `create-next-app` naming restriction error on folder `PorfolioAswin` containing capital letters. | Bootstrapped inside `portfolio/` subfolder and moved all files to workspace root. |
 | 2026-06-14 | Install Dependencies | **Completed** | None | Installed Framer Motion, GSAP, and Lucide React. |
 | 2026-06-14 | Component Implementation | **Completed** | Brand icons `Github` and `Linkedin` missing from `lucide-react` v1.18.0 due to brand logo removals in Lucide v1. | Created custom `src/components/ui/icons.tsx` with standard Feather SVG paths for Github and Linkedin. |
-| 2026-06-14 | Verification (Lint & Build) | **Completed** | None | Standard ESLint quotes and typescript typing errors resolved. Successfully compiled production build using Turbopack. |
+| 2026-06-14 | Testimonials Stack Overlap Fix | **Completed** | Content text from stacked lower cards showed through transparent glass cards causing overlap. | Rendered text details only on the active top card (`index === 0`) and gave cards a solid opaque background. |
+| 2026-06-14 | Bento Hero Visualizer Update | **Completed** | Visualizer replaced with toggleable cards. | Implemented custom GitHub contribution calendar grid and Current Focus ("Now") tabs. |
+| 2026-06-14 | Supabase Database Integration | **Completed** | API key requirement handles. | Created `src/lib/supabase.ts` with custom mock fallback client for demo mode. Integrated database insertion in `contact.tsx`. |
+| 2026-06-14 | Cloudinary Upload Integration | **Completed** | Upload button configuration handles. | Installed `next-cloudinary` and created `upload-showcase.tsx` with dynamic formats and upload preset indicators. |
+| 2026-06-14 | Verification (Lint & Build) | **Completed** | None | Successfully compiled production build using Turbopack with clean ESLint check. |
 
 ---
 
@@ -46,3 +50,8 @@ This file tracks the real-time progress of the Portfolio project, including task
 * **Error message:** `Export Github doesn't exist in target module` / `Export Linkedin doesn't exist in target module`
 * **Root cause:** Lucide React version 1.x removed all brand assets and logos to prevent trademark issues and maintain design consistency.
 * **Resolution:** Created a custom icons utility `src/components/ui/icons.tsx` exporting custom SVG components using the original Feather SVG coordinate paths.
+
+### Failure 5: Glassmorphic Testimonial Card Text Overlap
+* **Error message:** Visual text blur overlap observed in stack preview.
+* **Root cause:** Cards are stacked absolutely on top of each other. Since their backgrounds are translucent glassmorphic elements, the text from the underlying cards bled through, clashing with the active top card.
+* **Resolution:** Added a check to hide text contents for any card that is not currently the active top card (`index === 0`). Also applied a solid opaque background `bg-[#0c0c0e]` to prevent backdrop bleeding.
