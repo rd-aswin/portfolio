@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function Contact() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +28,11 @@ export default function Contact() {
     
     if (error) {
       console.error("Failed to insert message into database:", error);
+      setStatus("error");
+      setTimeout(() => {
+        setStatus("idle");
+      }, 5000);
+      return;
     }
     
     setStatus("success");
@@ -153,6 +158,16 @@ export default function Contact() {
                     placeholder="Describe your project ideas..."
                   />
                 </div>
+
+                {status === "error" && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 rounded-xl p-3"
+                  >
+                    Failed to send message. Please check your network or try calling/emailing directly.
+                  </motion.p>
+                )}
 
                 {/* Submit button */}
                 <motion.button

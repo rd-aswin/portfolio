@@ -7,7 +7,7 @@ import {
   Inbox, Settings, FolderPlus, MessageSquare, Save, Plus, 
   Trash2, UploadCloud, CheckCircle2, ArrowLeft, RefreshCw
 } from "lucide-react";
-import { supabase, isSupabaseDemoMode } from "@/lib/supabase";
+import { isSupabaseDemoMode } from "@/lib/supabase";
 import FluidMesh from "@/components/background/fluid-mesh";
 import Grain from "@/components/background/grain";
 
@@ -54,7 +54,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const sessionAuth = sessionStorage.getItem("admin_authenticated");
     if (sessionAuth === "true") {
+      const sessionPass = sessionStorage.getItem("admin_password");
       setTimeout(() => {
+        if (sessionPass) {
+          setPassword(sessionPass);
+        }
         setIsAuthenticated(true);
       }, 0);
     }
@@ -66,6 +70,7 @@ export default function AdminDashboard() {
     if (password === correctPassword) {
       setIsAuthenticated(true);
       sessionStorage.setItem("admin_authenticated", "true");
+      sessionStorage.setItem("admin_password", password);
       setAuthError(false);
     } else {
       setAuthError(true);
@@ -80,12 +85,28 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Fetch submissions
-      const { data: subs } = await supabase.from("contact_submissions").select("*").order("created_at", { ascending: false });
-      if (subs) setSubmissions(subs);
+      try {
+        const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+        const res = await fetch("/api/admin/submissions", {
+          headers: {
+            "Authorization": `Bearer ${correctPassword}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSubmissions(data);
+        } else {
+          console.error("Failed to fetch submissions:", res.statusText);
+        }
+      } catch (err) {
+        console.error("Error fetching submissions:", err);
+      }
     };
-    fetchData();
-  }, []);
+
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated, password]);
 
   const triggerSaveNotification = (msg: string) => {
     setSaveStatus(msg);
@@ -152,7 +173,7 @@ export default function AdminDashboard() {
     triggerSaveNotification("Testimonial Added!");
   };
 
-  const handleDeleteItem = (id: string, type: "project" | "testimonial" | "submission") => {
+  const handleDeleteItem = async (id: string, type: "project" | "testimonial" | "submission") => {
     if (type === "project") {
       setProjects(projects.filter(p => p.id !== id));
       triggerSaveNotification("Project Deleted");
@@ -160,8 +181,29 @@ export default function AdminDashboard() {
       setTestimonials(testimonials.filter(t => t.id !== id));
       triggerSaveNotification("Testimonial Deleted");
     } else {
-      setSubmissions(submissions.filter(s => s.id !== id));
-      triggerSaveNotification("Submission Removed");
+      if (isSupabaseDemoMode) {
+        setSubmissions(submissions.filter(s => s.id !== id));
+        triggerSaveNotification("Submission Removed (Demo)");
+        return;
+      }
+
+      try {
+        const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+        const res = await fetch(`/api/admin/submissions?id=${id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${correctPassword}`
+          }
+        });
+        if (res.ok) {
+          setSubmissions(submissions.filter(s => s.id !== id));
+          triggerSaveNotification("Submission Deleted");
+        } else {
+          console.error("Failed to delete submission");
+        }
+      } catch (err) {
+        console.error("Error deleting submission:", err);
+      }
     }
   };
 
