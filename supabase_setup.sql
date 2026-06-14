@@ -33,7 +33,10 @@ USING (true) WITH CHECK (true);
 -- ------------------------------------------
 -- 2. Table: site_config
 -- ------------------------------------------
-CREATE TABLE IF NOT EXISTS site_config (
+-- Drop old table if it exists to avoid type conflicts with UUID
+DROP TABLE IF EXISTS site_config CASCADE;
+
+CREATE TABLE site_config (
     id TEXT PRIMARY KEY DEFAULT 'main',
     owner_name TEXT NOT NULL,
     tagline TEXT NOT NULL,
@@ -69,14 +72,16 @@ VALUES (
     'available', 
     '+918075483385', 
     'aswin@example.com'
-)
-ON CONFLICT (id) DO NOTHING;
+);
 
 
 -- ------------------------------------------
 -- 3. Table: projects
 -- ------------------------------------------
-CREATE TABLE IF NOT EXISTS projects (
+-- Drop old table if it exists to avoid type conflicts with UUID
+DROP TABLE IF EXISTS projects CASCADE;
+
+CREATE TABLE projects (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     subtitle TEXT,
@@ -100,18 +105,20 @@ CREATE POLICY "Allow service_role full access projects"
 ON projects FOR ALL TO service_role
 USING (true) WITH CHECK (true);
 
--- Insert initial project values if empty
+-- Insert initial project values
 INSERT INTO projects (id, title, subtitle, tags, image_public_id)
 VALUES 
     ('aetherdb', 'AetherDB', 'Distributed Raft Consensus Engine', 'Go, Raft, gRPC', 'cld-sample-5'),
-    ('prism-webgl', 'Prism WebGL', 'Glass Refraction Simulator', 'WebGL, Three.js, GLSL', 'cld-sample-5')
-ON CONFLICT (id) DO NOTHING;
+    ('prism-webgl', 'Prism WebGL', 'Glass Refraction Simulator', 'WebGL, Three.js, GLSL', 'cld-sample-5');
 
 
 -- ------------------------------------------
 -- 4. Table: testimonials
 -- ------------------------------------------
-CREATE TABLE IF NOT EXISTS testimonials (
+-- Drop old table if it exists to avoid type conflicts with UUID
+DROP TABLE IF EXISTS testimonials CASCADE;
+
+CREATE TABLE testimonials (
     id TEXT PRIMARY KEY,
     author TEXT NOT NULL,
     quote TEXT NOT NULL,
@@ -138,5 +145,4 @@ USING (true) WITH CHECK (true);
 -- Insert initial feedback testimonial
 INSERT INTO testimonials (id, author, quote, title, company)
 VALUES 
-    ('1', 'Sarah Jenkins', 'Aswin designed and implemented our core synchronization engine.', 'CTO', 'FinSphere Inc.')
-ON CONFLICT (id) DO NOTHING;
+    ('1', 'Sarah Jenkins', 'Aswin designed and implemented our core synchronization engine.', 'CTO', 'FinSphere Inc.');
