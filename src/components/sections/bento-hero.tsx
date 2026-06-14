@@ -2,14 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { FileText, MapPin, ExternalLink, Cpu } from "lucide-react";
+import { FileText, MapPin, ExternalLink, Activity, Target, Music } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Github, Linkedin } from "../ui/icons";
 import Tilt from "../ui/tilt";
 
 export default function BentoHero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState("");
+  const [activeTab, setActiveTab] = useState<"activity" | "now">("activity");
 
   // Update clock
   useEffect(() => {
@@ -60,134 +61,31 @@ export default function BentoHero() {
     );
   }, []);
 
-  // Canvas 3D Particle Visualizer
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Generate mock GitHub contributions (7 days x 17 columns = 119 squares)
+  const renderGithubGrid = () => {
+    const levels = ["bg-[#161b22]", "bg-[#0e4429]", "bg-[#006d32]", "bg-[#26a641]", "bg-[#39d353]"];
+    const grid = [];
+    const seeds = [
+      0, 1, 0, 2, 0, 0, 1, 3, 0, 4, 1, 0, 2, 0, 3, 0, 1,
+      1, 0, 2, 0, 3, 0, 0, 1, 2, 0, 3, 4, 0, 1, 0, 2, 0,
+      0, 2, 0, 1, 0, 4, 2, 0, 1, 0, 0, 2, 0, 3, 1, 0, 2,
+      3, 0, 1, 0, 0, 1, 0, 2, 3, 0, 1, 2, 0, 4, 0, 1, 3,
+      0, 4, 1, 0, 2, 0, 3, 0, 1, 0, 2, 0, 3, 0, 0, 1, 2,
+      1, 0, 3, 2, 0, 1, 0, 4, 1, 0, 2, 0, 3, 1, 0, 2, 0,
+      0, 2, 0, 1, 3, 0, 2, 0, 1, 0, 4, 2, 0, 1, 0, 3, 1
+    ];
 
-    let animationFrameId: number;
-    let width = (canvas.width = canvas.offsetWidth);
-    let height = (canvas.height = canvas.offsetHeight);
-
-    // Track mouse coordinates over the visualizer card
-    const mouse = { x: width / 2, y: height / 2, active: false };
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
-    };
-    window.addEventListener("resize", handleResize);
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-      mouse.active = true;
-    };
-
-    const handleMouseLeave = () => {
-      mouse.active = false;
-    };
-
-    const card = canvas.closest(".bento-card");
-    if (card) {
-      card.addEventListener("mousemove", handleMouseMove as EventListener);
-      card.addEventListener("mouseleave", handleMouseLeave);
+    for (let i = 0; i < 119; i++) {
+      const levelClass = levels[seeds[i % seeds.length]];
+      grid.push(
+        <div
+          key={i}
+          className={`w-[10px] h-[10px] rounded-[2px] ${levelClass} transition-colors duration-300 hover:scale-[1.2] hover:ring-1 hover:ring-indigo-400 cursor-default`}
+        />
+      );
     }
-
-    // Particle definition
-    interface Particle {
-      x: number;
-      y: number;
-      z: number;
-      baseX: number;
-      baseY: number;
-      color: string;
-      size: number;
-      angle: number;
-      speed: number;
-    }
-
-    const particles: Particle[] = [];
-    const particleCount = 45;
-
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        z: Math.random() * 200 + 50, // 3D depth value
-        baseX: Math.random() * width,
-        baseY: Math.random() * height,
-        color: i % 2 === 0 ? "rgba(99, 102, 241, 0.45)" : "rgba(236, 72, 153, 0.3)", // Indigo and Pink
-        size: Math.random() * 3 + 1.5,
-        angle: Math.random() * Math.PI * 2,
-        speed: Math.random() * 0.4 + 0.1,
-      });
-    }
-
-    // Drawing loop
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-
-      // Draw mathematical connecting lines
-      for (let i = 0; i < particles.length; i++) {
-        const p1 = particles[i];
-        
-        // Circular orbit movement
-        p1.angle += p1.speed * 0.02;
-        p1.x = p1.baseX + Math.cos(p1.angle) * 35;
-        p1.y = p1.baseY + Math.sin(p1.angle) * 35;
-
-        // Attract toward mouse if active
-        if (mouse.active) {
-          const dx = mouse.x - p1.x;
-          const dy = mouse.y - p1.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 120) {
-            const force = (120 - dist) / 120;
-            p1.x += (dx / dist) * force * 4;
-            p1.y += (dy / dist) * force * 4;
-          }
-        }
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(p1.x, p1.y, p1.size, 0, Math.PI * 2);
-        ctx.fillStyle = p1.color;
-        ctx.fill();
-
-        // Connect nearby particles
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-          if (dist < 80) {
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(99, 102, 241, ${0.15 * (1 - dist / 80)})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-      }
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (card) {
-        card.removeEventListener("mousemove", handleMouseMove as EventListener);
-        card.removeEventListener("mouseleave", handleMouseLeave);
-      }
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
+    return grid;
+  };
 
   return (
     <section className="w-full max-w-6xl mx-auto px-4 pt-16 md:pt-28 pb-12 flex flex-col items-center">
@@ -240,21 +138,114 @@ export default function BentoHero() {
           </div>
         </div>
 
-        {/* Card 2: Interactive 3D Canvas (Col 2, Row 2) */}
+        {/* Card 2: Toggleable GitHub Activity & Current Focus (Col 2, Row 2) */}
         <Tilt className="bento-card md:col-span-2 md:row-span-2 glass-panel rounded-3xl overflow-hidden relative min-h-[300px] flex flex-col justify-between group p-6">
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full -z-10" />
-          <div className="relative z-10">
+          {/* Header & Toggle Controls */}
+          <div className="relative z-10 flex justify-between items-center w-full pb-3 border-b border-white/5">
             <span className="text-xs text-indigo-300 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <Cpu size={14} className="animate-spin" style={{ animationDuration: "6s" }} /> Interactive Sandbox
+              {activeTab === "activity" ? (
+                <>
+                  <Activity size={14} className="animate-pulse" /> GitHub Activity
+                </>
+              ) : (
+                <>
+                  <Target size={14} className="animate-bounce" style={{ animationDuration: "3s" }} /> What I&apos;m Doing Now
+                </>
+              )}
             </span>
+
+            {/* Toggle Tabs */}
+            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+              <button
+                onClick={() => setActiveTab("activity")}
+                className={`px-3 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                  activeTab === "activity"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-muted hover:text-white"
+                }`}
+              >
+                Activity
+              </button>
+              <button
+                onClick={() => setActiveTab("now")}
+                className={`px-3 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                  activeTab === "now"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-muted hover:text-white"
+                }`}
+              >
+                Focus
+              </button>
+            </div>
           </div>
-          <div className="relative z-10">
-            <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-indigo-300 transition-colors">
-              Dynamic Visualizer
-            </h3>
-            <p className="text-xs text-muted max-w-xs">
-              Move your cursor over this card to interact with the responsive 3D gravitational particle field.
-            </p>
+
+          {/* Tab Content Panels */}
+          <div className="flex-1 w-full flex items-center relative py-4">
+            <AnimatePresence mode="wait">
+              {activeTab === "activity" ? (
+                <motion.div
+                  key="activity-panel"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full space-y-4"
+                >
+                  {/* Contribution Grid */}
+                  <div className="flex gap-[4px] flex-wrap max-w-sm mx-auto justify-center">
+                    {renderGithubGrid()}
+                  </div>
+
+                  {/* GitHub Statistics */}
+                  <div className="flex justify-around items-center border-t border-white/5 pt-4 text-center">
+                    <div>
+                      <p className="text-lg font-bold text-white">2,481</p>
+                      <p className="text-[10px] text-muted">Commits This Year</p>
+                    </div>
+                    <div className="w-[1px] h-6 bg-white/5" />
+                    <div>
+                      <p className="text-lg font-bold text-white">42 Days</p>
+                      <p className="text-[10px] text-muted">Longest Streak</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="now-panel"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full space-y-3 px-2 text-xs"
+                >
+                  <div className="space-y-2">
+                    <p className="leading-relaxed">
+                      <span className="text-indigo-400 font-bold mr-2">⚡ Building:</span> 
+                      Distributed key-value engines and custom GLSL shader configurations.
+                    </p>
+                    <p className="leading-relaxed">
+                      <span className="text-indigo-400 font-bold mr-2">📚 Learning:</span> 
+                      WebGPU pipelines and systems programming with Rust.
+                    </p>
+                    <p className="leading-relaxed">
+                      <span className="text-indigo-400 font-bold mr-2">🎯 Goal:</span> 
+                      Engineering resilient, high-speed interfaces and network consensus layers.
+                    </p>
+                  </div>
+
+                  {/* Listening To Status */}
+                  <div className="mt-3 p-3 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl animate-pulse">
+                      <Music size={14} />
+                    </div>
+                    <div>
+                      <h5 className="text-[9px] text-muted uppercase tracking-wider font-semibold">Currently Jamming To</h5>
+                      <p className="text-[11px] text-white font-medium">Synthwave Focus Beats</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </Tilt>
 
@@ -305,7 +296,9 @@ export default function BentoHero() {
             <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl group-hover:scale-[1.05] transition-transform">
               <FileText size={20} />
             </div>
-            <ExternalLink size={14} className="text-muted group-hover:text-white transition-colors" />
+            <span className="absolute top-6 right-6 text-muted group-hover:text-white transition-colors">
+              <ExternalLink size={14} />
+            </span>
           </div>
           <div>
             <h4 className="text-xs text-muted mb-1">Documentation</h4>
