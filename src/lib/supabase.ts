@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -12,8 +12,7 @@ const isConfigured =
 // A mock Supabase client for graceful fallback in Demo Mode
 const mockSupabaseClient = {
   from: (table: string) => ({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    insert: async (data: any[]) => {
+    insert: async (data: unknown[]) => {
       console.warn(`[Supabase Demo Mode] Attempted insert into table "${table}":`, data);
       // Simulate network request latency
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -30,7 +29,6 @@ const mockSupabaseClient = {
 // Export active Supabase client or fallback mock
 export const supabase = isConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  : (mockSupabaseClient as any);
+  : (mockSupabaseClient as unknown as SupabaseClient);
 
 export const isSupabaseDemoMode = !isConfigured;

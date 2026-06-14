@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
 const apiKey = process.env.CLOUDINARY_API_KEY || "";
@@ -47,15 +47,14 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload using node stream pipeline
-    const result = await new Promise<{ public_id: string; secure_url: string } | null>((resolve, reject) => {
+    const result = await new Promise<UploadApiResponse | null>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { resource_type: "auto" },
         (error, uploadResult) => {
           if (error) {
             reject(error);
           } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            resolve(uploadResult as any);
+            resolve(uploadResult || null);
           }
         }
       );
