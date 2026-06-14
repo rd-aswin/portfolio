@@ -100,6 +100,12 @@ export default function AdminDashboard() {
         if (res.ok) {
           const data = await res.json();
           setSubmissions(data);
+        } else if (res.status === 401) {
+          sessionStorage.removeItem("admin_authenticated");
+          sessionStorage.removeItem("admin_password");
+          setIsAuthenticated(false);
+          setAuthError(true);
+          console.warn("Session expired or password invalid. Resetting authentication.");
         } else {
           console.error("Failed to fetch submissions:", res.statusText);
         }
@@ -203,6 +209,12 @@ export default function AdminDashboard() {
         if (res.ok) {
           setSubmissions(submissions.filter(s => s.id !== id));
           triggerSaveNotification("Submission Deleted");
+        } else if (res.status === 401) {
+          sessionStorage.removeItem("admin_authenticated");
+          sessionStorage.removeItem("admin_password");
+          setIsAuthenticated(false);
+          setAuthError(true);
+          console.warn("Session expired or password invalid. Resetting authentication.");
         } else {
           console.error("Failed to delete submission");
         }
