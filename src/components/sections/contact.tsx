@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, CheckCircle2, Loader2, Mail, MapPin } from "lucide-react";
+import { Send, CheckCircle2, Loader2, Mail, MapPin, Phone } from "lucide-react";
 
 export default function Contact() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
@@ -61,6 +61,18 @@ export default function Contact() {
               <div>
                 <h4 className="text-xs text-muted font-bold uppercase tracking-wider">Location</h4>
                 <p className="text-sm font-semibold text-white">Kerala, India</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                <Phone size={20} />
+              </div>
+              <div>
+                <h4 className="text-xs text-muted font-bold uppercase tracking-wider">Call Me</h4>
+                <a href="tel:+918075483385" className="text-sm font-semibold text-white hover:text-indigo-400 transition-colors">
+                  +91 80754 83385
+                </a>
               </div>
             </div>
           </div>

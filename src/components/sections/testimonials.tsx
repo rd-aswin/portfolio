@@ -149,30 +149,36 @@ function Card({ testimonial, isTop, index, onSwipe }: CardProps) {
         transition: { duration: 0.25 },
       }}
       transition={isTop ? { type: "spring", stiffness: 300, damping: 20 } : { duration: 0.35 }}
-      className={`absolute w-full max-w-sm p-6 md:p-8 rounded-3xl glass-panel origin-bottom flex flex-col justify-between select-none ${
-        isTop ? "shadow-[0_12px_40px_rgba(0,0,0,0.4)]" : "pointer-events-none"
+      className={`absolute w-full max-w-sm p-6 md:p-8 rounded-3xl border border-white/5 bg-[#0c0c0e] origin-bottom flex flex-col justify-between select-none ${
+        isTop ? "shadow-[0_12px_40px_rgba(0,0,0,0.5)]" : "pointer-events-none"
       }`}
     >
-      <div>
-        <div className="flex justify-between items-start mb-6">
-          <MessageSquare className="text-indigo-400" size={24} />
-          {isTop && (
-            <span className="text-[9px] font-bold text-indigo-400/80 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1">
-              <HelpCircle size={10} /> Swipe Me
-            </span>
-          )}
-        </div>
-        <p className="text-sm md:text-base text-white/90 leading-relaxed italic">
-          &quot;{testimonial.quote}&quot;
-        </p>
-      </div>
+      {index === 0 ? (
+        <>
+          <div>
+            <div className="flex justify-between items-start mb-6">
+              <MessageSquare className="text-indigo-400" size={24} />
+              {isTop && (
+                <span className="text-[9px] font-bold text-indigo-400/80 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1">
+                  <HelpCircle size={10} /> Swipe Me
+                </span>
+              )}
+            </div>
+            <p className="text-sm md:text-base text-white/90 leading-relaxed italic">
+              &quot;{testimonial.quote}&quot;
+            </p>
+          </div>
 
-      <div className="mt-8 border-t border-white/5 pt-4">
-        <h4 className="text-sm font-semibold text-white">{testimonial.author}</h4>
-        <p className="text-xs text-muted">
-          {testimonial.title}, <span className="text-indigo-400/80">{testimonial.company}</span>
-        </p>
-      </div>
+          <div className="mt-8 border-t border-white/5 pt-4">
+            <h4 className="text-sm font-semibold text-white">{testimonial.author}</h4>
+            <p className="text-xs text-muted">
+              {testimonial.title}, <span className="text-indigo-400/80">{testimonial.company}</span>
+            </p>
+          </div>
+        </>
+      ) : (
+        <div className="h-full" />
+      )}
     </motion.div>
   );
 }
