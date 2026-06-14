@@ -14,7 +14,10 @@ This file tracks the real-time progress of the Portfolio project, including task
 | 2026-06-13 | Sync & Push Local Commit | **Completed** | Push rejected due to conflicting history (remote had a different `Initial commit` containing just `LICENSE`). | Ran `git pull --rebase origin main`, resolved conflict in `LICENSE` by combining changes, and completed rebase. |
 | 2026-06-13 | Remote Push | **Completed** | None | Successfully pushed `main` to GitHub. |
 | 2026-06-14 | Setup Planning & Design | **Completed** | None | Defined layout structure, Bento grid plans, and custom animations. Created `project.md` and `tracker.md`. |
-| 2026-06-14 | Bootstrap Next.js App | **Pending** | Awaiting user approval to run bootstrapping. | |
+| 2026-06-14 | Bootstrap Next.js App | **Completed** | `create-next-app` naming restriction error on folder `PorfolioAswin` containing capital letters. | Bootstrapped inside `portfolio/` subfolder and moved all files to workspace root. |
+| 2026-06-14 | Install Dependencies | **Completed** | None | Installed Framer Motion, GSAP, and Lucide React. |
+| 2026-06-14 | Component Implementation | **Completed** | Brand icons `Github` and `Linkedin` missing from `lucide-react` v1.18.0 due to brand logo removals in Lucide v1. | Created custom `src/components/ui/icons.tsx` with standard Feather SVG paths for Github and Linkedin. |
+| 2026-06-14 | Verification (Lint & Build) | **Completed** | None | Standard ESLint quotes and typescript typing errors resolved. Successfully compiled production build using Turbopack. |
 
 ---
 
@@ -33,3 +36,13 @@ This file tracks the real-time progress of the Portfolio project, including task
   2. Resolved conflict in `LICENSE` to match the remote's author `RD Aswin`.
   3. Staged using `git add LICENSE` and finished with `git rebase --continue`.
   4. Pushed successfully.
+
+### Failure 3: npm Naming Restriction on Bootstrap
+* **Error message:** `Could not create a project called "PorfolioAswin" because of npm naming restrictions: name can no longer contain capital letters`
+* **Root cause:** `create-next-app` uses the directory name for the npm package name when bootstrapped inside `./`. The directory `PorfolioAswin` has capital letters.
+* **Resolution:** Bootstrapped the application in a temporary subdirectory `portfolio/` (lowercase) and then moved all created files up to the root.
+
+### Failure 4: Missing Brand Icons in Lucide React v1
+* **Error message:** `Export Github doesn't exist in target module` / `Export Linkedin doesn't exist in target module`
+* **Root cause:** Lucide React version 1.x removed all brand assets and logos to prevent trademark issues and maintain design consistency.
+* **Resolution:** Created a custom icons utility `src/components/ui/icons.tsx` exporting custom SVG components using the original Feather SVG coordinate paths.
