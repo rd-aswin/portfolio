@@ -21,6 +21,7 @@ This file tracks the real-time progress of the Portfolio project, including task
 | 2026-06-14 | Bento Hero Visualizer Update | **Completed** | Visualizer replaced with toggleable cards. | Implemented custom GitHub contribution calendar grid and Current Focus ("Now") tabs. |
 | 2026-06-14 | Supabase Database Integration | **Completed** | API key requirement handles. | Created `src/lib/supabase.ts` with custom mock fallback client for demo mode. Integrated database insertion in `contact.tsx`. |
 | 2026-06-14 | Cloudinary Upload Integration | **Completed** | Upload button configuration handles. | Installed `next-cloudinary` and created `upload-showcase.tsx` with dynamic formats and upload preset indicators. |
+| 2026-06-14 | Admin Panel & Secure Uploads | **Completed** | Standard client-side uploader exposes presets. Need secure server-side uploading. | Installed Node.js `cloudinary` SDK. Implemented server-side stream upload endpoint at `src/app/api/admin/upload/route.ts` and created Admin Dashboard under `src/app/admin/page.tsx`. |
 | 2026-06-14 | Verification (Lint & Build) | **Completed** | None | Successfully compiled production build using Turbopack with clean ESLint check. |
 
 ---

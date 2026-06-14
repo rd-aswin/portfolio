@@ -1,35 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
-import { CldUploadButton, CldImage } from "next-cloudinary";
+import React, { useState, useRef } from "react";
+import { CldImage } from "next-cloudinary";
 import { Image as ImageIcon, UploadCloud, RefreshCw, AlertTriangle, ArrowRight } from "lucide-react";
 
 export default function UploadShowcase() {
   const [imagePublicId, setImagePublicId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "";
+  // Check if Cloud Name has been entered (we don't check API Secret here since it is private to server)
+  const isConfigured = cloudName && cloudName !== "your_cloudinary_cloud_name";
 
-  const isConfigured = 
-    cloudName && 
-    uploadPreset && 
-    cloudName !== "your_cloudinary_cloud_name" && 
-    uploadPreset !== "your_upload_preset_name";
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleUploadSuccess = (result: any) => {
-    if (result?.info?.public_id) {
-      setImagePublicId(result.info.public_id);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", files[0]);
+
+      // Secure server-side uploading (No private keys exposed to browser)
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.public_id) {
+        setImagePublicId(data.public_id);
+      } else {
+        console.error("Server upload response error:", data.error);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  // Mock upload action for Demo Mode
   const triggerDemoUpload = () => {
     setImagePublicId("cld-sample-5"); // Use standard Cloudinary sample public ID
   };
 
   const handleReset = () => {
     setImagePublicId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -41,10 +60,10 @@ export default function UploadShowcase() {
               <UploadCloud size={14} /> Cloudinary Integration
             </span>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-2">
-              Serverless Image Optimizations
+              Secure Server-Side Image Optimizations
             </h2>
             <p className="text-muted text-xs md:text-sm max-w-lg">
-              Test dynamic format conversion, auto-quality, and resizing on-the-fly. Upload an asset directly to your Cloudinary cloud.
+              Test dynamic format conversion and auto-quality. Files are uploaded via Next.js API endpoints, keeping Cloudinary credentials safe.
             </p>
           </div>
 
@@ -64,32 +83,47 @@ export default function UploadShowcase() {
             <h3 className="text-sm font-semibold text-white">How it works:</h3>
             <div className="space-y-4 text-xs text-muted leading-relaxed">
               <p>
-                1. Clicking upload triggers a client-side secure upload directly to Cloudinary servers.
+                1. File selection triggers a POST request carrying the raw binary block to our server API (`/api/admin/upload`).
               </p>
               <p>
-                2. On success, the image&apos;s public ID is captured by React state.
+                2. The server endpoint receives the file and uploads it securely to Cloudinary using private backend environment keys.
               </p>
               <p>
-                3. The image is rendered using Next-Cloudinary&apos;s optimized component which auto-delivers modern formats (like WebP/AVIF) and compresses quality losslessly.
+                3. The optimized asset is rendered using Next-Cloudinary&apos;s component which auto-serves modern codecs (WebP/AVIF) dynamically.
               </p>
             </div>
 
             <div className="pt-4 flex flex-wrap gap-4">
-              {isConfigured ? (
-                <CldUploadButton
-                  onSuccess={handleUploadSuccess}
-                  uploadPreset={uploadPreset}
-                  options={{ maxFiles: 1 }}
-                  className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
-                >
-                  <UploadCloud size={16} /> Open Upload Widget
-                </CldUploadButton>
-              ) : (
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-semibold text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" /> Uploading...
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={16} /> Upload via Server API
+                  </>
+                )}
+              </button>
+
+              {!isConfigured && !imagePublicId && (
                 <button
                   onClick={triggerDemoUpload}
-                  className="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 active:scale-95"
+                  className="px-5 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/5 font-semibold text-xs rounded-xl transition-all flex items-center gap-2"
                 >
-                  <UploadCloud size={16} /> Trigger Demo Upload
+                  Trigger Mock Preview
                 </button>
               )}
 
