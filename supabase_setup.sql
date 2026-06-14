@@ -44,6 +44,7 @@ CREATE TABLE site_config (
     availability_status TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     email_address TEXT NOT NULL,
+    resume_url TEXT,
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -63,7 +64,7 @@ ON site_config FOR ALL TO service_role
 USING (true) WITH CHECK (true);
 
 -- Insert initial default row
-INSERT INTO site_config (id, owner_name, tagline, about_text, availability_status, phone_number, email_address)
+INSERT INTO site_config (id, owner_name, tagline, about_text, availability_status, phone_number, email_address, resume_url)
 VALUES (
     'main', 
     'Aswin', 
@@ -71,7 +72,8 @@ VALUES (
     'A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.', 
     'available', 
     '+918075483385', 
-    'aswin@example.com'
+    'aswin@example.com',
+    '/resume.pdf'
 );
 
 

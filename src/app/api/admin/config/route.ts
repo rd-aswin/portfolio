@@ -56,6 +56,7 @@ export async function POST(req: Request) {
         availability_status: body.availability_status,
         phone_number: body.phone_number,
         email_address: body.email_address,
+        resume_url: body.resume_url,
         updated_at: new Date().toISOString()
       })
       .select()

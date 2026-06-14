@@ -14,7 +14,8 @@ export default function BentoHero() {
   const [config, setConfig] = useState({
     owner_name: "Aswin",
     about_text: "A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.",
-    availability_status: "available"
+    availability_status: "available",
+    resume_url: "/resume.pdf"
   });
 
   // Update clock
@@ -44,7 +45,8 @@ export default function BentoHero() {
             setConfig({
               owner_name: data.owner_name,
               about_text: data.about_text,
-              availability_status: data.availability_status
+              availability_status: data.availability_status,
+              resume_url: data.resume_url || "/resume.pdf"
             });
           }
         }
@@ -314,9 +316,10 @@ export default function BentoHero() {
 
         {/* Card 5: Resume Download (Col 1, Row 1) */}
         <a
-          href="/resume.pdf"
+          href={config.resume_url}
           target="_blank"
-          className="bento-card glass-panel rounded-3xl p-6 flex flex-col justify-between min-h-[160px] group hover:border-indigo-500/20 hover:bg-white/[0.02] transition-all duration-300"
+          rel="noreferrer"
+          className="bento-card glass-panel rounded-3xl p-6 flex flex-col justify-between min-h-[160px] group hover:border-indigo-500/20 hover:bg-white/[0.02] transition-all duration-300 relative"
         >
           <div className="flex justify-between items-start">
             <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl group-hover:scale-[1.05] transition-transform">
