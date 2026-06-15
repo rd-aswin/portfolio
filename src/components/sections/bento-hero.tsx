@@ -15,7 +15,14 @@ export default function BentoHero() {
     owner_name: "Aswin",
     about_text: "A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.",
     availability_status: "available",
-    resume_url: "/resume.pdf"
+    resume_url: "/resume.pdf",
+    focus_working_on: "",
+    focus_learning: "",
+    focus_goal: "",
+    jamming_to: "",
+    tech_stack: "Next.js, React, TypeScript, Tailwind CSS, GSAP, Framer Motion",
+    github_url: "https://github.com/rd-aswin",
+    linkedin_url: "https://linkedin.com"
   });
 
   // Update clock
@@ -35,6 +42,38 @@ export default function BentoHero() {
     return () => clearInterval(timer);
   }, []);
 
+  const [githubActivity, setGithubActivity] = useState({
+    levels: [] as number[],
+    totalContributions: 2481,
+    longestStreak: 42,
+    isLoading: true
+  });
+
+  useEffect(() => {
+    const fetchGithubActivity = async () => {
+      const username = config.github_url ? config.github_url.split("/").filter(Boolean).pop() : "rd-aswin";
+      if (!username) return;
+      
+      try {
+        const res = await fetch(`/api/github-activity?username=${username}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.levels)) {
+            setGithubActivity({
+              levels: data.levels,
+              totalContributions: data.totalContributions ?? 0,
+              longestStreak: data.longestStreak ?? 0,
+              isLoading: false
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching GitHub activity:", err);
+      }
+    };
+    fetchGithubActivity();
+  }, [config.github_url]);
+
   useEffect(() => {
     const fetchConfig = async () => {
       try {
@@ -46,7 +85,14 @@ export default function BentoHero() {
               owner_name: data.owner_name,
               about_text: data.about_text,
               availability_status: data.availability_status,
-              resume_url: data.resume_url || "/resume.pdf"
+              resume_url: data.resume_url || "/resume.pdf",
+              focus_working_on: data.focus_working_on || "",
+              focus_learning: data.focus_learning || "",
+              focus_goal: data.focus_goal || "",
+              jamming_to: data.jamming_to || "",
+              tech_stack: data.tech_stack || "Next.js, React, TypeScript, Tailwind CSS, GSAP, Framer Motion",
+              github_url: data.github_url || "https://github.com/rd-aswin",
+              linkedin_url: data.linkedin_url || "https://linkedin.com"
             });
           }
         }
@@ -89,9 +135,9 @@ export default function BentoHero() {
     );
   }, []);
 
-  // Generate mock GitHub contributions (7 days x 17 columns = 119 squares)
+  // Generate GitHub contributions (7 days x 17 columns = 119 squares)
   const renderGithubGrid = () => {
-    const levels = ["bg-[#161b22]", "bg-[#0e4429]", "bg-[#006d32]", "bg-[#26a641]", "bg-[#39d353]"];
+    const levelColors = ["bg-[#161b22]", "bg-[#0e4429]", "bg-[#006d32]", "bg-[#26a641]", "bg-[#39d353]"];
     const grid = [];
     const seeds = [
       0, 1, 0, 2, 0, 0, 1, 3, 0, 4, 1, 0, 2, 0, 3, 0, 1,
@@ -103,12 +149,22 @@ export default function BentoHero() {
       0, 2, 0, 1, 3, 0, 2, 0, 1, 0, 4, 2, 0, 1, 0, 3, 1
     ];
 
+    const activeLevels = githubActivity.levels.length > 0 
+      ? githubActivity.levels.slice(-119) 
+      : seeds;
+
+    // Pad activeLevels if it contains fewer than 119 items
+    while (activeLevels.length < 119) {
+      activeLevels.unshift(0);
+    }
+
     for (let i = 0; i < 119; i++) {
-      const levelClass = levels[seeds[i % seeds.length]];
+      const level = activeLevels[i];
+      const colorClass = levelColors[level >= 0 && level <= 4 ? level : 0];
       grid.push(
         <div
           key={i}
-          className={`w-[10px] h-[10px] rounded-[2px] ${levelClass} transition-colors duration-300 hover:scale-[1.2] hover:ring-1 hover:ring-indigo-400 cursor-default`}
+          className={`w-[10px] h-[10px] rounded-[2px] ${colorClass} transition-colors duration-300 hover:scale-[1.2] hover:ring-1 hover:ring-indigo-400 cursor-default`}
         />
       );
     }
@@ -147,7 +203,7 @@ export default function BentoHero() {
             </a>
             <div className="flex gap-3">
               <a
-                href="https://github.com/rd-aswin"
+                href={config.github_url}
                 target="_blank"
                 rel="noreferrer"
                 className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-all duration-200 hover:scale-[1.05]"
@@ -155,7 +211,7 @@ export default function BentoHero() {
                 <Github size={18} />
               </a>
               <a
-                href="https://linkedin.com"
+                href={config.linkedin_url}
                 target="_blank"
                 rel="noreferrer"
                 className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-white transition-all duration-200 hover:scale-[1.05]"
@@ -227,12 +283,16 @@ export default function BentoHero() {
                   {/* GitHub Statistics */}
                   <div className="flex justify-around items-center border-t border-white/5 pt-4 text-center">
                     <div>
-                      <p className="text-lg font-bold text-white">2,481</p>
+                      <p className="text-lg font-bold text-white">
+                        {githubActivity.isLoading ? "..." : githubActivity.totalContributions.toLocaleString()}
+                      </p>
                       <p className="text-[10px] text-muted">Commits This Year</p>
                     </div>
                     <div className="w-[1px] h-6 bg-white/5" />
                     <div>
-                      <p className="text-lg font-bold text-white">42 Days</p>
+                      <p className="text-lg font-bold text-white">
+                        {githubActivity.isLoading ? "..." : `${githubActivity.longestStreak} Days`}
+                      </p>
                       <p className="text-[10px] text-muted">Longest Streak</p>
                     </div>
                   </div>
@@ -249,15 +309,15 @@ export default function BentoHero() {
                   <div className="space-y-2">
                     <p className="leading-relaxed">
                       <span className="text-indigo-400 font-bold mr-2">⚡ Building:</span> 
-                      Distributed key-value engines and custom GLSL shader configurations.
+                      {config.focus_working_on || "Distributed key-value engines and custom GLSL shader configurations."}
                     </p>
                     <p className="leading-relaxed">
                       <span className="text-indigo-400 font-bold mr-2">📚 Learning:</span> 
-                      WebGPU pipelines and systems programming with Rust.
+                      {config.focus_learning || "WebGPU pipelines and systems programming with Rust."}
                     </p>
                     <p className="leading-relaxed">
                       <span className="text-indigo-400 font-bold mr-2">🎯 Goal:</span> 
-                      Engineering resilient, high-speed interfaces and network consensus layers.
+                      {config.focus_goal || "Engineering resilient, high-speed interfaces and network consensus layers."}
                     </p>
                   </div>
 
@@ -268,7 +328,7 @@ export default function BentoHero() {
                     </div>
                     <div>
                       <h5 className="text-[9px] text-muted uppercase tracking-wider font-semibold">Currently Jamming To</h5>
-                      <p className="text-[11px] text-white font-medium">Synthwave Focus Beats</p>
+                      <p className="text-[11px] text-white font-medium">{config.jamming_to || "Synthwave Focus Beats"}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -303,7 +363,7 @@ export default function BentoHero() {
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mt-4">
-            {["Next.js", "React", "TypeScript", "Tailwind CSS", "GSAP", "Framer Motion"].map((skill) => (
+            {config.tech_stack.split(",").map((s) => s.trim()).filter(Boolean).map((skill) => (
               <span
                 key={skill}
                 className="px-2.5 py-1 text-xs bg-white/5 border border-white/5 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all duration-200 rounded-lg text-white font-medium cursor-default"

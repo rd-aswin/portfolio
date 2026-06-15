@@ -13,11 +13,14 @@ const isAuthorized = (req: Request) => {
     return false;
   }
   const password = authHeader.substring(7);
-  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "aswinadmin";
+  const correctPassword = 
+    process.env.ADMIN_PASSWORD || 
+    process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 
+    "aswinadmin";
   return password === correctPassword;
 };
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const supabase = getAdminSupabase();
     const { data, error } = await supabase
@@ -28,6 +31,11 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (data && !isAuthorized(req)) {
+      delete data.telegram_bot_token;
+      delete data.telegram_chat_id;
     }
 
     return NextResponse.json(data);
@@ -57,6 +65,15 @@ export async function POST(req: Request) {
         phone_number: body.phone_number,
         email_address: body.email_address,
         resume_url: body.resume_url,
+        focus_working_on: body.focus_working_on,
+        focus_learning: body.focus_learning,
+        focus_goal: body.focus_goal,
+        jamming_to: body.jamming_to,
+        tech_stack: body.tech_stack,
+        github_url: body.github_url,
+        linkedin_url: body.linkedin_url,
+        telegram_bot_token: body.telegram_bot_token,
+        telegram_chat_id: body.telegram_chat_id,
         updated_at: new Date().toISOString()
       })
       .select()

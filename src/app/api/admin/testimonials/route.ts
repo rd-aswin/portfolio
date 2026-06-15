@@ -13,7 +13,10 @@ const isAuthorized = (req: Request) => {
     return false;
   }
   const password = authHeader.substring(7);
-  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "aswinadmin";
+  const correctPassword = 
+    process.env.ADMIN_PASSWORD || 
+    process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 
+    "aswinadmin";
   return password === correctPassword;
 };
 

@@ -9,14 +9,17 @@ const getAdminSupabase = () => {
   return createClient(url, key);
 };
 
-// Verify the Authorization header against NEXT_PUBLIC_ADMIN_PASSWORD
+// Verify the Authorization header against ADMIN_PASSWORD
 const isAuthorized = (req: Request) => {
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return false;
   }
   const password = authHeader.substring(7);
-  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "aswinadmin";
+  const correctPassword = 
+    process.env.ADMIN_PASSWORD || 
+    process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 
+    "aswinadmin";
   return password === correctPassword;
 };
 

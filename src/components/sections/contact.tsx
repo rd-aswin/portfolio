@@ -1,13 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, CheckCircle2, Loader2, Mail, MapPin, Phone } from "lucide-react";
-import { supabase } from "../../lib/supabase";
 
 export default function Contact() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [config, setConfig] = useState({
+    email_address: "aswin@example.com",
+    phone_number: "+918075483385"
+  });
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch("/api/admin/config");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setConfig({
+              email_address: data.email_address || "aswin@example.com",
+              phone_number: data.phone_number || "+918075483385"
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching contact config:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,28 +38,29 @@ export default function Contact() {
 
     setStatus("loading");
     
-    // Save to Supabase (or trigger mock demo action)
-    const { error } = await supabase
-      .from("contact_submissions")
-      .insert([
-        {
-          name: formState.name,
-          email: formState.email,
-          message: formState.message,
-        }
-      ]);
-    
-    if (error) {
-      console.error("Failed to insert message into database:", error);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formState)
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      
+      setStatus("success");
+      setFormState({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("Failed to send message:", error);
       setStatus("error");
       setTimeout(() => {
         setStatus("idle");
       }, 5000);
       return;
     }
-    
-    setStatus("success");
-    setFormState({ name: "", email: "", message: "" });
 
     // Reset status after a few seconds
     setTimeout(() => {
@@ -66,8 +90,8 @@ export default function Contact() {
               </div>
               <div>
                 <h4 className="text-xs text-muted font-bold uppercase tracking-wider">Email Me</h4>
-                <a href="mailto:aswin@example.com" className="text-sm font-semibold text-white hover:text-indigo-400 transition-colors">
-                  aswin@example.com
+                <a href={`mailto:${config.email_address}`} className="text-sm font-semibold text-white hover:text-indigo-400 transition-colors">
+                  {config.email_address}
                 </a>
               </div>
             </div>
@@ -88,8 +112,8 @@ export default function Contact() {
               </div>
               <div>
                 <h4 className="text-xs text-muted font-bold uppercase tracking-wider">Call Me</h4>
-                <a href="tel:+918075483385" className="text-sm font-semibold text-white hover:text-indigo-400 transition-colors">
-                  +91 80754 83385
+                <a href={`tel:${config.phone_number}`} className="text-sm font-semibold text-white hover:text-indigo-400 transition-colors">
+                  {config.phone_number}
                 </a>
               </div>
             </div>

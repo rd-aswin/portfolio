@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Inbox, Settings, FolderPlus, MessageSquare, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Inbox, Settings, FolderPlus, MessageSquare, ArrowLeft, CheckCircle2, Calendar } from "lucide-react";
 
 import { isSupabaseDemoMode } from "@/lib/supabase";
 import FluidMesh from "@/components/background/fluid-mesh";
@@ -15,9 +15,10 @@ import AdminInbox from "@/components/admin/AdminInbox";
 import AdminConfig from "@/components/admin/AdminConfig";
 import AdminProjects from "@/components/admin/AdminProjects";
 import AdminTestimonials from "@/components/admin/AdminTestimonials";
+import AdminTimeline from "@/components/admin/AdminTimeline";
 
 // Types
-import { ContactSubmission, SiteConfig, ProjectItem, TestimonialItem } from "@/types";
+import { ContactSubmission, SiteConfig, ProjectItem, TestimonialItem, TimelineItem } from "@/types";
 
 // Mock initial data for Demo mode
 const mockSubmissions: ContactSubmission[] = [
@@ -25,12 +26,42 @@ const mockSubmissions: ContactSubmission[] = [
   { id: "2", name: "Alice Vance", email: "alice@vance.design", message: "Stunning WebGL shader refraction work on your website! Let's collaborate on an agency project.", created_at: "2026-06-14T09:20:00Z" }
 ];
 
+const mockTimelineItems: TimelineItem[] = [
+  {
+    id: "exp-1",
+    year: "2024 - Present",
+    title: "Senior Frontend Engineer",
+    company: "Apex Tech Solutions",
+    description: "Architecting accessible design systems and leading migration of enterprise dashboards to Next.js App Router, increasing page speeds by 35%.",
+    skills: "Next.js, React, TypeScript, Tailwind CSS, Framer Motion",
+    type: "work",
+  },
+  {
+    id: "exp-2",
+    year: "2022 - 2024",
+    title: "Software Engineer II",
+    company: "Vector Systems",
+    description: "Developed and maintained full-stack internal tooling. Optimized REST/GraphQL API gateway responses, reducing network payload sizes by 20%.",
+    skills: "Node.js, GraphQL, PostgreSQL, Docker, AWS",
+    type: "work",
+  },
+  {
+    id: "exp-3",
+    year: "2018 - 2022",
+    title: "B.Tech in Computer Science",
+    company: "State University of Technology",
+    description: "Graduated with Honors. Focused coursework in Distributed Systems, Object Oriented Programming, and Web Engineering.",
+    skills: "Data Structures, Algorithms, C++, JavaScript, SQL",
+    type: "education",
+  },
+];
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState(false);
   
-  const [activeTab, setActiveTab] = useState<"inbox" | "config" | "projects" | "testimonials">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "config" | "projects" | "testimonials" | "timeline">("inbox");
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [config, setConfig] = useState<SiteConfig>({
     owner_name: "Aswin",
@@ -38,7 +69,12 @@ export default function AdminDashboard() {
     about_text: "A software engineer specialized in designing exceptional, interactive, and high-performance web applications using modern web ecosystems.",
     availability_status: "available",
     phone_number: "+918075483385",
-    email_address: "aswin@example.com"
+    email_address: "aswin@example.com",
+    tech_stack: "Next.js, React, TypeScript, Tailwind CSS, GSAP, Framer Motion",
+    github_url: "https://github.com/rd-aswin",
+    linkedin_url: "https://linkedin.com",
+    telegram_bot_token: "",
+    telegram_chat_id: ""
   });
 
   const [projects, setProjects] = useState<ProjectItem[]>([
@@ -51,6 +87,16 @@ export default function AdminDashboard() {
     { id: "1", author: "Sarah Jenkins", quote: "Aswin designed and implemented our core synchronization engine.", title: "CTO", company: "FinSphere Inc." }
   ]);
   const [newTestimonial, setNewTestimonial] = useState({ author: "", quote: "", title: "", company: "" });
+
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
+  const [newTimelineItem, setNewTimelineItem] = useState({
+    year: "",
+    title: "",
+    company: "",
+    description: "",
+    skills: "",
+    type: "work" as "work" | "education" | "award"
+  });
 
   const [isUploading, setIsUploading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
@@ -69,15 +115,40 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "aswinadmin";
-    if (password === correctPassword) {
-      setIsAuthenticated(true);
-      sessionStorage.setItem("admin_authenticated", "true");
-      sessionStorage.setItem("admin_password", password);
-      setAuthError(false);
-    } else {
+
+    if (isSupabaseDemoMode) {
+      // Allow demo bypass using default password
+      if (password === "aswinadmin") {
+        setIsAuthenticated(true);
+        sessionStorage.setItem("admin_authenticated", "true");
+        sessionStorage.setItem("admin_password", password);
+        setAuthError(false);
+      } else {
+        setAuthError(true);
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/verify", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${password}`
+        }
+      });
+
+      if (res.ok) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem("admin_authenticated", "true");
+        sessionStorage.setItem("admin_password", password);
+        setAuthError(false);
+      } else {
+        setAuthError(true);
+      }
+    } catch (err) {
+      console.error("Authentication error:", err);
       setAuthError(true);
     }
   };
@@ -95,6 +166,7 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       if (isSupabaseDemoMode) {
         setSubmissions(mockSubmissions);
+        setTimelineItems(mockTimelineItems);
         return;
       }
 
@@ -131,6 +203,13 @@ export default function AdminDashboard() {
         if (resTest.ok) {
           const data = await resTest.json();
           if (data) setTestimonials(data);
+        }
+
+        // 5. Fetch timeline
+        const resTimeline = await fetch("/api/admin/timeline");
+        if (resTimeline.ok) {
+          const data = await resTimeline.json();
+          if (data) setTimelineItems(data);
         }
 
       } catch (err) {
@@ -289,7 +368,49 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteItem = async (id: string, type: "project" | "testimonial" | "submission") => {
+  const handleAddTimelineItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTimelineItem.year || !newTimelineItem.title || !newTimelineItem.company) return;
+
+    const added: TimelineItem = {
+      id: Date.now().toString(),
+      ...newTimelineItem
+    };
+
+    if (isSupabaseDemoMode) {
+      setTimelineItems([...timelineItems, added]);
+      setNewTimelineItem({ year: "", title: "", company: "", description: "", skills: "", type: "work" });
+      triggerSaveNotification("Timeline Item Added (Demo)!");
+      return;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/timeline", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(added)
+      });
+
+      if (res.ok) {
+        const savedItem = await res.json();
+        setTimelineItems([...timelineItems, savedItem]);
+        setNewTimelineItem({ year: "", title: "", company: "", description: "", skills: "", type: "work" });
+        triggerSaveNotification("Timeline Item Added!");
+      } else if (res.status === 401) {
+        handleAuthFailure();
+      } else {
+        console.error("Failed to add timeline item");
+      }
+    } catch (err) {
+      console.error("Error adding timeline item:", err);
+    }
+  };
+
+  const handleDeleteItem = async (id: string, type: "project" | "testimonial" | "submission" | "timeline") => {
     if (isSupabaseDemoMode) {
       if (type === "project") {
         setProjects(projects.filter(p => p.id !== id));
@@ -297,6 +418,9 @@ export default function AdminDashboard() {
       } else if (type === "testimonial") {
         setTestimonials(testimonials.filter(t => t.id !== id));
         triggerSaveNotification("Testimonial Deleted (Demo)");
+      } else if (type === "timeline") {
+        setTimelineItems(timelineItems.filter(t => t.id !== id));
+        triggerSaveNotification("Timeline Item Deleted (Demo)");
       } else {
         setSubmissions(submissions.filter(s => s.id !== id));
         triggerSaveNotification("Submission Removed (Demo)");
@@ -313,6 +437,8 @@ export default function AdminDashboard() {
         endpoint = `/api/admin/projects?id=${id}`;
       } else if (type === "testimonial") {
         endpoint = `/api/admin/testimonials?id=${id}`;
+      } else if (type === "timeline") {
+        endpoint = `/api/admin/timeline?id=${id}`;
       } else {
         endpoint = `/api/admin/submissions?id=${id}`;
       }
@@ -329,6 +455,9 @@ export default function AdminDashboard() {
         } else if (type === "testimonial") {
           setTestimonials(testimonials.filter(t => t.id !== id));
           triggerSaveNotification("Testimonial Deleted");
+        } else if (type === "timeline") {
+          setTimelineItems(timelineItems.filter(t => t.id !== id));
+          triggerSaveNotification("Timeline Item Deleted");
         } else {
           setSubmissions(submissions.filter(s => s.id !== id));
           triggerSaveNotification("Submission Deleted");
@@ -386,13 +515,14 @@ export default function AdminDashboard() {
               { id: "inbox", label: "Inbox", icon: Inbox },
               { id: "config", label: "Config", icon: Settings },
               { id: "projects", label: "Projects", icon: FolderPlus },
-              { id: "testimonials", label: "Feedback", icon: MessageSquare }
+              { id: "testimonials", label: "Feedback", icon: MessageSquare },
+              { id: "timeline", label: "Journey", icon: Calendar }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as "inbox" | "config" | "projects" | "testimonials")}
+                  onClick={() => setActiveTab(tab.id as "inbox" | "config" | "projects" | "testimonials" | "timeline")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === tab.id
                       ? "bg-indigo-600 text-white shadow-md"
@@ -449,6 +579,16 @@ export default function AdminDashboard() {
                 newTestimonial={newTestimonial}
                 setNewTestimonial={setNewTestimonial}
                 onAddTestimonial={handleAddTestimonial}
+                onDelete={handleDeleteItem}
+              />
+            )}
+
+            {activeTab === "timeline" && (
+              <AdminTimeline
+                timelineItems={timelineItems}
+                newTimelineItem={newTimelineItem}
+                setNewTimelineItem={setNewTimelineItem}
+                onAddTimelineItem={handleAddTimelineItem}
                 onDelete={handleDeleteItem}
               />
             )}

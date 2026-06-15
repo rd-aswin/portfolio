@@ -45,6 +45,15 @@ CREATE TABLE site_config (
     phone_number TEXT NOT NULL,
     email_address TEXT NOT NULL,
     resume_url TEXT,
+    focus_working_on TEXT,
+    focus_learning TEXT,
+    focus_goal TEXT,
+    jamming_to TEXT,
+    tech_stack TEXT,
+    github_url TEXT,
+    linkedin_url TEXT,
+    telegram_bot_token TEXT,
+    telegram_chat_id TEXT,
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -64,7 +73,25 @@ ON site_config FOR ALL TO service_role
 USING (true) WITH CHECK (true);
 
 -- Insert initial default row
-INSERT INTO site_config (id, owner_name, tagline, about_text, availability_status, phone_number, email_address, resume_url)
+INSERT INTO site_config (
+    id, 
+    owner_name, 
+    tagline, 
+    about_text, 
+    availability_status, 
+    phone_number, 
+    email_address, 
+    resume_url,
+    focus_working_on,
+    focus_learning,
+    focus_goal,
+    jamming_to,
+    tech_stack,
+    github_url,
+    linkedin_url,
+    telegram_bot_token,
+    telegram_chat_id
+)
 VALUES (
     'main', 
     'Aswin', 
@@ -73,7 +100,16 @@ VALUES (
     'available', 
     '+918075483385', 
     'aswin@example.com',
-    '/resume.pdf'
+    '/resume.pdf',
+    'Distributed key-value engines and custom GLSL shader configurations.',
+    'WebGPU pipelines and systems programming with Rust.',
+    'Engineering resilient, high-speed interfaces and network consensus layers.',
+    'Synthwave Focus Beats',
+    'Next.js, React, TypeScript, Tailwind CSS, GSAP, Framer Motion',
+    'https://github.com/rd-aswin',
+    'https://linkedin.com',
+    NULL,
+    NULL
 );
 
 
@@ -148,3 +184,42 @@ USING (true) WITH CHECK (true);
 INSERT INTO testimonials (id, author, quote, title, company)
 VALUES 
     ('1', 'Sarah Jenkins', 'Aswin designed and implemented our core synchronization engine.', 'CTO', 'FinSphere Inc.');
+
+
+-- ------------------------------------------
+-- 5. Table: timeline_items
+-- ------------------------------------------
+DROP TABLE IF EXISTS timeline_items CASCADE;
+
+CREATE TABLE timeline_items (
+    id TEXT PRIMARY KEY,
+    year TEXT NOT NULL,
+    title TEXT NOT NULL,
+    company TEXT NOT NULL,
+    description TEXT NOT NULL,
+    skills TEXT,
+    type TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE timeline_items ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow public read
+DROP POLICY IF EXISTS "Allow public read timeline_items" ON timeline_items;
+CREATE POLICY "Allow public read timeline_items"
+ON timeline_items FOR SELECT TO anon
+USING (true);
+
+-- Policy: Allow service_role full access
+DROP POLICY IF EXISTS "Allow service_role full access timeline_items" ON timeline_items;
+CREATE POLICY "Allow service_role full access timeline_items"
+ON timeline_items FOR ALL TO service_role
+USING (true) WITH CHECK (true);
+
+-- Insert initial timeline values
+INSERT INTO timeline_items (id, year, title, company, description, skills, type)
+VALUES 
+    ('exp-1', '2024 - Present', 'Senior Frontend Engineer', 'Apex Tech Solutions', 'Architecting accessible design systems and leading migration of enterprise dashboards to Next.js App Router, increasing page speeds by 35%.', 'Next.js, React, TypeScript, Tailwind CSS, Framer Motion', 'work'),
+    ('exp-2', '2022 - 2024', 'Software Engineer II', 'Vector Systems', 'Developed and maintained full-stack internal tooling. Optimized REST/GraphQL API gateway responses, reducing network payload sizes by 20%.', 'Node.js, GraphQL, PostgreSQL, Docker, AWS', 'work'),
+    ('exp-3', '2018 - 2022', 'B.Tech in Computer Science', 'State University of Technology', 'Graduated with Honors. Focused coursework in Distributed Systems, Object Oriented Programming, and Web Engineering.', 'Data Structures, Algorithms, C++, JavaScript, SQL', 'education');

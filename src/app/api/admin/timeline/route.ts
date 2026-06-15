@@ -24,9 +24,9 @@ export async function GET() {
   try {
     const supabase = getAdminSupabase();
     const { data, error } = await supabase
-      .from("projects")
+      .from("timeline_items")
       .select("*")
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -49,14 +49,16 @@ export async function POST(req: Request) {
     const supabase = getAdminSupabase();
     
     const { data, error } = await supabase
-      .from("projects")
+      .from("timeline_items")
       .insert([
         {
           id: body.id || Date.now().toString(),
+          year: body.year,
           title: body.title,
-          subtitle: body.subtitle,
-          tags: body.tags,
-          image_public_id: body.image_public_id,
+          company: body.company,
+          description: body.description,
+          skills: body.skills,
+          type: body.type,
           created_at: new Date().toISOString()
         }
       ])
@@ -88,7 +90,7 @@ export async function DELETE(req: Request) {
 
     const supabase = getAdminSupabase();
     const { error } = await supabase
-      .from("projects")
+      .from("timeline_items")
       .delete()
       .eq("id", id);
 

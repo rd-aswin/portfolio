@@ -14,6 +14,16 @@ interface TimelineItem {
   type: "work" | "education" | "award";
 }
 
+interface DbTimelineItem {
+  id: string;
+  year: string;
+  title: string;
+  company: string;
+  description: string;
+  skills: string | null;
+  type: "work" | "education" | "award";
+}
+
 const timelineData: TimelineItem[] = [
   {
     id: "exp-1",
@@ -46,6 +56,36 @@ const timelineData: TimelineItem[] = [
 
 export default function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [timelineItems, setTimelineItems] = React.useState<TimelineItem[]>([]);
+
+  React.useEffect(() => {
+    const fetchTimeline = async () => {
+      try {
+        const res = await fetch("/api/admin/timeline");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            // Map the database string skills to string[]
+            const parsedData = data.map((item: DbTimelineItem) => ({
+              ...item,
+              skills: typeof item.skills === "string" 
+                ? item.skills.split(",").map((s: string) => s.trim()).filter(Boolean) 
+                : (Array.isArray(item.skills) ? item.skills : [])
+            }));
+            setTimelineItems(parsedData);
+          } else {
+            setTimelineItems(timelineData);
+          }
+        } else {
+          setTimelineItems(timelineData);
+        }
+      } catch (err) {
+        console.error("Error fetching timeline:", err);
+        setTimelineItems(timelineData);
+      }
+    };
+    fetchTimeline();
+  }, []);
   
   // Track scroll position inside this timeline container
   const { scrollYProgress } = useScroll({
@@ -78,7 +118,7 @@ export default function Timeline() {
         />
 
         <div className="space-y-12">
-          {timelineData.map((item, idx) => {
+          {timelineItems.map((item, idx) => {
             const isEven = idx % 2 === 0;
             return (
               <div
