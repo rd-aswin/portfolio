@@ -3,7 +3,7 @@
 
 A premium, interactive personal portfolio website featuring a dark-mode glassmorphic Bento grid, smooth entrance animations, drag-to-dismiss testimonials, and a fully customizable administrative control panel.
 
-🔗 **[Live Link](https://aswin.dev)** *(Update this link with your active deployment URL)*
+🔗 **[Live Link](https://portfolio-ivory-two-r8gpx0k49h.vercel.app/)**
 
 ---
 
