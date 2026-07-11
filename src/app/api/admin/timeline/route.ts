@@ -76,6 +76,44 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PUT(req: Request) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    if (!body.id) {
+      return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    }
+
+    const supabase = getAdminSupabase();
+    
+    const { data, error } = await supabase
+      .from("timeline_items")
+      .update({
+        year: body.year,
+        title: body.title,
+        company: body.company,
+        description: body.description,
+        skills: body.skills,
+        type: body.type
+      })
+      .eq("id", body.id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unknown error occurred";
+    return NextResponse.json({ error: errMsg }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

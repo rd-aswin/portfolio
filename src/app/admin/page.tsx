@@ -410,6 +410,42 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditTimelineItem = async (updatedItem: TimelineItem) => {
+    if (isSupabaseDemoMode) {
+      setTimelineItems(timelineItems.map(t => t.id === updatedItem.id ? updatedItem : t));
+      triggerSaveNotification("Timeline Item Updated (Demo)!");
+      return true;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/timeline", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(updatedItem)
+      });
+
+      if (res.ok) {
+        const savedItem = await res.json();
+        setTimelineItems(timelineItems.map(t => t.id === savedItem.id ? savedItem : t));
+        triggerSaveNotification("Timeline Item Updated!");
+        return true;
+      } else if (res.status === 401) {
+        handleAuthFailure();
+        return false;
+      } else {
+        console.error("Failed to update timeline item");
+        return false;
+      }
+    } catch (err) {
+      console.error("Error updating timeline item:", err);
+      return false;
+    }
+  };
+
   const handleDeleteItem = async (id: string, type: "project" | "testimonial" | "submission" | "timeline") => {
     if (isSupabaseDemoMode) {
       if (type === "project") {
@@ -589,6 +625,7 @@ export default function AdminDashboard() {
                 newTimelineItem={newTimelineItem}
                 setNewTimelineItem={setNewTimelineItem}
                 onAddTimelineItem={handleAddTimelineItem}
+                onEditTimelineItem={handleEditTimelineItem}
                 onDelete={handleDeleteItem}
               />
             )}
