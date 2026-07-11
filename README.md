@@ -60,6 +60,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Admin Panel Credentials
 ADMIN_PASSWORD=your_secure_admin_password
+CRON_SECRET=your_custom_cron_verification_secret
 
 # Cloudinary Secure File Storage
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
