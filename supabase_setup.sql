@@ -125,6 +125,13 @@ CREATE TABLE projects (
     subtitle TEXT,
     tags TEXT,
     image_public_id TEXT,
+    description TEXT,
+    detailed_description TEXT,
+    role TEXT,
+    metrics TEXT,
+    github_url TEXT,
+    demo_url TEXT,
+    color TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

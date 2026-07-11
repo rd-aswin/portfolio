@@ -81,7 +81,19 @@ export default function AdminDashboard() {
     { id: "aetherdb", title: "AetherDB", subtitle: "Distributed Raft Consensus Engine", tags: "Go, Raft, gRPC", image_public_id: "cld-sample-5" },
     { id: "prism-webgl", title: "Prism WebGL", subtitle: "Glass Refraction Simulator", tags: "WebGL, Three.js, GLSL", image_public_id: "cld-sample-5" }
   ]);
-  const [newProject, setNewProject] = useState({ title: "", subtitle: "", tags: "", file: null as File | null });
+  const [newProject, setNewProject] = useState({
+    title: "",
+    subtitle: "",
+    tags: "",
+    file: null as File | null,
+    description: "",
+    detailed_description: "",
+    role: "",
+    metrics: "",
+    github_url: "",
+    demo_url: "",
+    color: "from-indigo-600 to-violet-500"
+  });
 
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([
     { id: "1", author: "Sarah Jenkins", quote: "Aswin designed and implemented our core synchronization engine.", title: "CTO", company: "FinSphere Inc." }
@@ -290,12 +302,31 @@ export default function AdminDashboard() {
       title: newProject.title,
       subtitle: newProject.subtitle,
       tags: newProject.tags,
-      image_public_id: publicId
+      image_public_id: publicId,
+      description: newProject.description,
+      detailed_description: newProject.detailed_description,
+      role: newProject.role,
+      metrics: newProject.metrics,
+      github_url: newProject.github_url,
+      demo_url: newProject.demo_url,
+      color: newProject.color
     };
 
     if (isSupabaseDemoMode) {
       setProjects([...projects, added]);
-      setNewProject({ title: "", subtitle: "", tags: "", file: null });
+      setNewProject({
+        title: "",
+        subtitle: "",
+        tags: "",
+        file: null,
+        description: "",
+        detailed_description: "",
+        role: "",
+        metrics: "",
+        github_url: "",
+        demo_url: "",
+        color: "from-indigo-600 to-violet-500"
+      });
       triggerSaveNotification("Project Added (Demo)!");
       return;
     }
@@ -314,7 +345,19 @@ export default function AdminDashboard() {
       if (res.ok) {
         const savedProject = await res.json();
         setProjects([...projects, savedProject]);
-        setNewProject({ title: "", subtitle: "", tags: "", file: null });
+        setNewProject({
+          title: "",
+          subtitle: "",
+          tags: "",
+          file: null,
+          description: "",
+          detailed_description: "",
+          role: "",
+          metrics: "",
+          github_url: "",
+          demo_url: "",
+          color: "from-indigo-600 to-violet-500"
+        });
         triggerSaveNotification("Project Added!");
       } else if (res.status === 401) {
         handleAuthFailure();
@@ -323,6 +366,42 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Error adding project:", err);
+    }
+  };
+
+  const handleEditProject = async (updatedProject: ProjectItem) => {
+    if (isSupabaseDemoMode) {
+      setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+      triggerSaveNotification("Project Updated (Demo)!");
+      return true;
+    }
+
+    try {
+      const correctPassword = password || sessionStorage.getItem("admin_password") || "";
+      const res = await fetch("/api/admin/projects", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${correctPassword}`
+        },
+        body: JSON.stringify(updatedProject)
+      });
+
+      if (res.ok) {
+        const savedProject = await res.json();
+        setProjects(projects.map(p => p.id === savedProject.id ? savedProject : p));
+        triggerSaveNotification("Project Updated!");
+        return true;
+      } else if (res.status === 401) {
+        handleAuthFailure();
+        return false;
+      } else {
+        console.error("Failed to update project");
+        return false;
+      }
+    } catch (err) {
+      console.error("Error updating project:", err);
+      return false;
     }
   };
 
@@ -605,6 +684,7 @@ export default function AdminDashboard() {
                 setNewProject={setNewProject}
                 isUploading={isUploading}
                 onAddProject={handleAddProject}
+                onEditProject={handleEditProject}
                 onDelete={handleDeleteItem}
               />
             )}

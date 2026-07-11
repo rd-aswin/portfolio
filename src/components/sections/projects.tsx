@@ -28,6 +28,13 @@ interface DbProject {
   subtitle?: string;
   tags?: string;
   image_public_id?: string;
+  description?: string;
+  detailed_description?: string;
+  role?: string;
+  metrics?: string;
+  github_url?: string;
+  demo_url?: string;
+  color?: string;
 }
 
 const projectsData: Project[] = [
@@ -107,14 +114,14 @@ export default function Projects() {
                 id: dbProj.id,
                 title: dbProj.title,
                 subtitle: dbProj.subtitle || "",
-                description: staticProj?.description || dbProj.subtitle || "",
-                detailedDescription: staticProj?.detailedDescription || dbProj.subtitle || "No description provided yet.",
+                description: dbProj.description || staticProj?.description || dbProj.subtitle || "",
+                detailedDescription: dbProj.detailed_description || staticProj?.detailedDescription || dbProj.subtitle || "No description provided yet.",
                 tags: tagsArray.length > 0 ? tagsArray : (staticProj?.tags || []),
-                role: staticProj?.role || "Developer",
-                metrics: staticProj?.metrics || "Ready",
-                github: staticProj?.github || "#",
-                demo: staticProj?.demo || "#",
-                color: staticProj?.color || "from-indigo-600 to-violet-500",
+                role: dbProj.role || staticProj?.role || "Developer",
+                metrics: dbProj.metrics || staticProj?.metrics || "Ready",
+                github: dbProj.github_url || staticProj?.github || "#",
+                demo: dbProj.demo_url || staticProj?.demo || "#",
+                color: dbProj.color || staticProj?.color || "from-indigo-600 to-violet-500",
                 image_public_id: dbProj.image_public_id || staticProj?.image_public_id || ""
               };
             });

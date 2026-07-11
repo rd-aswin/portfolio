@@ -31,6 +31,13 @@ export interface ProjectItem {
   subtitle: string;
   tags: string;
   image_public_id: string;
+  description?: string;
+  detailed_description?: string;
+  role?: string;
+  metrics?: string;
+  github_url?: string;
+  demo_url?: string;
+  color?: string;
 }
 
 export interface TestimonialItem {

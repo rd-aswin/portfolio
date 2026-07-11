@@ -57,9 +57,59 @@ export async function POST(req: Request) {
           subtitle: body.subtitle,
           tags: body.tags,
           image_public_id: body.image_public_id,
+          description: body.description,
+          detailed_description: body.detailed_description,
+          role: body.role,
+          metrics: body.metrics,
+          github_url: body.github_url,
+          demo_url: body.demo_url,
+          color: body.color,
           created_at: new Date().toISOString()
         }
       ])
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "An unknown error occurred";
+    return NextResponse.json({ error: errMsg }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    if (!body.id) {
+      return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    }
+
+    const supabase = getAdminSupabase();
+    
+    const { data, error } = await supabase
+      .from("projects")
+      .update({
+        title: body.title,
+        subtitle: body.subtitle,
+        tags: body.tags,
+        image_public_id: body.image_public_id,
+        description: body.description,
+        detailed_description: body.detailed_description,
+        role: body.role,
+        metrics: body.metrics,
+        github_url: body.github_url,
+        demo_url: body.demo_url,
+        color: body.color
+      })
+      .eq("id", body.id)
       .select()
       .single();
 
