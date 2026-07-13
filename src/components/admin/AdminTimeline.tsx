@@ -59,6 +59,13 @@ export default function AdminTimeline({
     }
   };
 
+  const getStartYear = (yearStr: string): number => {
+    const match = yearStr.match(/\b\d{4}\b/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
+  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(a.year) - getStartYear(b.year));
+
   return (
     <motion.div
       key="timeline"
@@ -73,7 +80,7 @@ export default function AdminTimeline({
           {timelineItems.length === 0 ? (
             <p className="text-xs text-muted">No timeline items found. Default items will be shown on the homepage.</p>
           ) : (
-            timelineItems.map((item) => (
+            sortedItems.map((item) => (
               <div key={item.id} className="p-4 bg-white/[0.01] border border-white/5 rounded-2xl flex justify-between items-start gap-4">
                 <div className="space-y-1">
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-semibold text-indigo-400">

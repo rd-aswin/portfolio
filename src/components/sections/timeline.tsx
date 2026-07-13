@@ -98,6 +98,13 @@ export default function Timeline() {
     damping: 35,
   });
 
+  const getStartYear = (yearStr: string): number => {
+    const match = yearStr.match(/\b\d{4}\b/);
+    return match ? parseInt(match[0], 10) : 0;
+  };
+
+  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(a.year) - getStartYear(b.year));
+
   return (
     <section id="experience" className="w-full max-w-5xl mx-auto px-4 py-20 relative">
       <div className="mb-16 text-center md:text-left">
@@ -118,7 +125,7 @@ export default function Timeline() {
         />
 
         <div className="space-y-12">
-          {timelineItems.map((item, idx) => {
+          {sortedItems.map((item, idx) => {
             const isEven = idx % 2 === 0;
             return (
               <div
