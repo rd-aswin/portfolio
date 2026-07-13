@@ -81,7 +81,7 @@ const projectsData: Project[] = [
 
 export default function Projects() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>(projectsData);
+  const [projects, setProjects] = useState<Project[] | null>(null);
 
   // Disable scroll when modal is open
   useEffect(() => {
@@ -126,10 +126,15 @@ export default function Projects() {
               };
             });
             setProjects(merged);
+          } else {
+            setProjects([]);
           }
+        } else {
+          setProjects([]);
         }
       } catch (err) {
         console.error("Error fetching projects:", err);
+        setProjects([]);
       }
     };
     fetchProjects();
@@ -146,15 +151,40 @@ export default function Projects() {
         </p>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <Tilt key={project.id} className="h-full">
-            <motion.div
-              layoutId={`card-container-${project.id}`}
-              onClick={() => setSelectedProject(project)}
-              className="glass-panel rounded-3xl p-6 h-full flex flex-col justify-between cursor-pointer group hover:border-white/10 transition-colors duration-300"
-            >
+      {projects === null ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+          {[1, 2, 3].map((idx) => (
+            <div key={idx} className="glass-panel rounded-3xl p-6 h-80 flex flex-col justify-between border-white/5 bg-white/[0.01] opacity-40">
+              <div className="space-y-4">
+                <div className="h-32 rounded-2xl bg-white/5 mb-6" />
+                <div className="h-6 bg-white/10 rounded w-48" />
+                <div className="space-y-2 mt-3">
+                  <div className="h-3 bg-white/10 rounded w-full" />
+                  <div className="h-3 bg-white/10 rounded w-[60%]" />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <div className="h-5 bg-white/5 rounded w-12" />
+                <div className="h-5 bg-white/5 rounded w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-12 text-center glass-panel rounded-3xl border border-white/5 bg-white/[0.01] max-w-md mx-auto">
+          <p className="text-xs text-muted leading-relaxed">
+            My projects portfolio is currently being updated. Please check back soon or log in to the admin panel to add them.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <Tilt key={project.id} className="h-full">
+              <motion.div
+                layoutId={`card-container-${project.id}`}
+                onClick={() => setSelectedProject(project)}
+                className="glass-panel rounded-3xl p-6 h-full flex flex-col justify-between cursor-pointer group hover:border-white/10 transition-colors duration-300"
+              >
               <div>
                 {/* Decorative colored gradient thumbnail */}
                 <div
@@ -215,7 +245,7 @@ export default function Projects() {
           </Tilt>
         ))}
       </div>
-
+      )}
       {/* Shared Layout Expanded Modal Overlay */}
       <AnimatePresence>
         {selectedProject && (

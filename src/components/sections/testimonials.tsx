@@ -12,33 +12,9 @@ interface Testimonial {
   company: string;
 }
 
-const testimonialsData: Testimonial[] = [
-  {
-    id: "test-1",
-    quote: "Aswin designed and implemented our core synchronization engine. The Raft consensus code was clean, highly performant, and easily passed our internal security audits.",
-    author: "Sarah Jenkins",
-    title: "Chief Technology Officer",
-    company: "FinSphere Inc.",
-  },
-  {
-    id: "test-2",
-    quote: "The WebGL work Aswin completed for our creative launch was extraordinary. High-end, smooth animations that locked at 60fps on mobile browsers.",
-    author: "Marcus Chen",
-    title: "Creative Director",
-    company: "Raytrace Studios",
-  },
-  {
-    id: "test-3",
-    quote: "Aswin's test automation framework saved our development team dozens of hours of manual PR validation. Incredibly modular design.",
-    author: "Elena Rostova",
-    title: "VP of Engineering",
-    company: "AutoQA Platforms",
-  },
-];
-
 export default function Testimonials() {
-  const [loadedData, setLoadedData] = useState<Testimonial[]>(testimonialsData);
-  const [cards, setCards] = useState<Testimonial[]>(testimonialsData);
+  const [loadedData, setLoadedData] = useState<Testimonial[] | null>(null);
+  const [cards, setCards] = useState<Testimonial[] | null>(null);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -49,10 +25,18 @@ export default function Testimonials() {
           if (data && data.length > 0) {
             setLoadedData(data);
             setCards(data);
+          } else {
+            setLoadedData([]);
+            setCards([]);
           }
+        } else {
+          setLoadedData([]);
+          setCards([]);
         }
       } catch (err) {
         console.error("Error fetching testimonials:", err);
+        setLoadedData([]);
+        setCards([]);
       }
     };
     fetchTestimonials();
@@ -60,11 +44,15 @@ export default function Testimonials() {
 
   // Function to remove top card when swiped
   const removeCard = (id: string) => {
-    setCards((prev) => prev.filter((card) => card.id !== id));
+    if (cards) {
+      setCards((prev) => prev ? prev.filter((card) => card.id !== id) : []);
+    }
   };
 
   const resetDeck = () => {
-    setCards(loadedData);
+    if (loadedData) {
+      setCards(loadedData);
+    }
   };
 
   return (
@@ -80,7 +68,37 @@ export default function Testimonials() {
 
       <div className="relative w-full max-w-md h-[280px] flex items-center justify-center">
         <AnimatePresence>
-          {cards.length > 0 ? (
+          {cards === null ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              className="w-full max-w-sm p-6 md:p-8 rounded-3xl border border-white/5 bg-[#0c0c0e]/80 animate-pulse flex flex-col justify-between h-[280px] opacity-40"
+            >
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-8 h-8 rounded-full bg-white/10" />
+                </div>
+                <div className="space-y-2.5">
+                  <div className="h-4 bg-white/10 rounded w-full" />
+                  <div className="h-4 bg-white/10 rounded w-[95%]" />
+                  <div className="h-4 bg-white/10 rounded w-[70%]" />
+                </div>
+              </div>
+              <div className="mt-8 border-t border-white/5 pt-4 space-y-2">
+                <div className="h-4 bg-white/10 rounded w-24" />
+                <div className="h-3 bg-white/5 rounded w-32" />
+              </div>
+            </motion.div>
+          ) : loadedData && loadedData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center glass-panel rounded-3xl border border-white/5 bg-white/[0.01] max-w-sm w-full h-[200px]">
+              <div className="p-3 bg-white/5 text-muted rounded-2xl mb-3">
+                <MessageSquare size={20} />
+              </div>
+              <p className="text-xs text-muted leading-relaxed">
+                No client feedback shared yet. Please check back later or add feedback in the admin panel.
+              </p>
+            </div>
+          ) : cards.length > 0 ? (
             cards.map((testimonial, idx) => {
               const isTop = idx === cards.length - 1;
               return (
@@ -97,7 +115,7 @@ export default function Testimonials() {
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center text-center max-w-sm"
+              className="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center text-center max-w-sm w-full"
             >
               <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl mb-4">
                 <MessageSquare size={24} />

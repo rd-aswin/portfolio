@@ -24,39 +24,11 @@ interface DbTimelineItem {
   type: "work" | "education" | "award";
 }
 
-const timelineData: TimelineItem[] = [
-  {
-    id: "exp-1",
-    year: "2024 - Present",
-    title: "Senior Frontend Engineer",
-    company: "Apex Tech Solutions",
-    description: "Architecting accessible design systems and leading migration of enterprise dashboards to Next.js App Router, increasing page speeds by 35%.",
-    skills: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion"],
-    type: "work",
-  },
-  {
-    id: "exp-2",
-    year: "2022 - 2024",
-    title: "Software Engineer II",
-    company: "Vector Systems",
-    description: "Developed and maintained full-stack internal tooling. Optimized REST/GraphQL API gateway responses, reducing network payload sizes by 20%.",
-    skills: ["Node.js", "GraphQL", "PostgreSQL", "Docker", "AWS"],
-    type: "work",
-  },
-  {
-    id: "exp-3",
-    year: "2018 - 2022",
-    title: "B.Tech in Computer Science",
-    company: "State University of Technology",
-    description: "Graduated with Honors. Focused coursework in Distributed Systems, Object Oriented Programming, and Web Engineering.",
-    skills: ["Data Structures", "Algorithms", "C++", "JavaScript", "SQL"],
-    type: "education",
-  },
-];
+
 
 export default function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [timelineItems, setTimelineItems] = React.useState<TimelineItem[]>([]);
+  const [timelineItems, setTimelineItems] = React.useState<TimelineItem[] | null>(null);
 
   React.useEffect(() => {
     const fetchTimeline = async () => {
@@ -74,14 +46,14 @@ export default function Timeline() {
             }));
             setTimelineItems(parsedData);
           } else {
-            setTimelineItems(timelineData);
+            setTimelineItems([]);
           }
         } else {
-          setTimelineItems(timelineData);
+          setTimelineItems([]);
         }
       } catch (err) {
         console.error("Error fetching timeline:", err);
-        setTimelineItems(timelineData);
+        setTimelineItems([]);
       }
     };
     fetchTimeline();
@@ -103,7 +75,7 @@ export default function Timeline() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(b.year) - getStartYear(a.year));
+  const sortedItems = timelineItems ? [...timelineItems].sort((a, b) => getStartYear(b.year) - getStartYear(a.year)) : [];
 
   return (
     <section id="experience" className="w-full max-w-5xl mx-auto px-4 py-20 relative">
@@ -116,17 +88,52 @@ export default function Timeline() {
         </p>
       </div>
 
-      <div ref={containerRef} className="relative min-h-[500px]">
-        {/* Scroll-tracked Vertical Timeline Line */}
-        <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-[2px] bg-white/10 -translate-x-[1px]" />
-        <motion.div
-          style={{ scaleY }}
-          className="absolute left-6 md:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-indigo-500 via-fuchsia-500 to-pink-500 origin-top -translate-x-[1px] shadow-[0_0_12px_rgba(99,102,241,0.5)]"
-        />
+      <div ref={containerRef} className="relative min-h-[400px]">
+        {timelineItems === null ? (
+          <div className="space-y-12 animate-pulse">
+            {[1, 2, 3].map((idx) => {
+              const isEven = idx % 2 === 0;
+              return (
+                <div key={idx} className="relative flex flex-col md:flex-row md:justify-between items-start md:items-center w-full opacity-40">
+                  <div className="absolute left-6 md:left-1/2 w-4 h-4 rounded-full bg-white/10 border-2 border-white/20 -translate-x-1/2 z-10" />
+                  <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${isEven ? "md:text-right md:order-1" : "md:order-2"}`}>
+                    <div className={`h-4 bg-white/10 rounded w-24 mb-2 ${isEven ? "md:ml-auto" : ""}`} />
+                    <div className={`h-6 bg-white/10 rounded w-48 mb-2 ${isEven ? "md:ml-auto" : ""}`} />
+                    <div className={`h-3 bg-white/5 rounded w-32 ${isEven ? "md:ml-auto" : ""}`} />
+                  </div>
+                  <div className={`w-full md:w-[45%] pl-12 md:pl-0 ${isEven ? "md:order-2" : "md:text-left md:order-1"}`}>
+                    <div className="glass-panel rounded-2xl p-5 md:p-6 space-y-3 bg-white/[0.01] border-white/5">
+                      <div className="h-4 bg-white/10 rounded w-16" />
+                      <div className="h-3 bg-white/10 rounded w-full" />
+                      <div className="h-3 bg-white/10 rounded w-[80%]" />
+                      <div className="flex gap-1.5 mt-2">
+                        <div className="h-5 bg-white/5 rounded w-12" />
+                        <div className="h-5 bg-white/5 rounded w-16" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : timelineItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-12 text-center glass-panel rounded-3xl border border-white/5 bg-white/[0.01] max-w-md mx-auto">
+            <p className="text-xs text-muted leading-relaxed">
+              My journey details are currently being updated. Please check back soon or log in to the admin panel to add them.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Scroll-tracked Vertical Timeline Line */}
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-[2px] bg-white/10 -translate-x-[1px]" />
+            <motion.div
+              style={{ scaleY }}
+              className="absolute left-6 md:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-indigo-500 via-fuchsia-500 to-pink-500 origin-top -translate-x-[1px] shadow-[0_0_12px_rgba(99,102,241,0.5)]"
+            />
 
-        <div className="space-y-12">
-          {sortedItems.map((item, idx) => {
-            const isEven = idx % 2 === 0;
+            <div className="space-y-12">
+              {sortedItems.map((item, idx) => {
+                const isEven = idx % 2 === 0;
             return (
               <div
                 key={item.id}
@@ -204,8 +211,10 @@ export default function Timeline() {
               </div>
             );
           })}
-        </div>
-      </div>
-    </section>
+          </div>
+        </>
+      )}
+    </div>
+  </section>
   );
 }
