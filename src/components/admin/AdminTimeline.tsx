@@ -64,7 +64,7 @@ export default function AdminTimeline({
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(a.year) - getStartYear(b.year));
+  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(b.year) - getStartYear(a.year));
 
   return (
     <motion.div

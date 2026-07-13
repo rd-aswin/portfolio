@@ -103,7 +103,7 @@ export default function Timeline() {
     return match ? parseInt(match[0], 10) : 0;
   };
 
-  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(a.year) - getStartYear(b.year));
+  const sortedItems = [...timelineItems].sort((a, b) => getStartYear(b.year) - getStartYear(a.year));
 
   return (
     <section id="experience" className="w-full max-w-5xl mx-auto px-4 py-20 relative">
